@@ -1,0 +1,358 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import emailjs from "@emailjs/browser";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import useBasketStore from "../store";
+import { imageUrl } from "@/lib/imageUrl";
+import Image from "next/image";
+import { updateProductStock } from "@/lib/updateProductStock";
+import { generateAwb } from "@/lib/fanCourier";
+import { FileIcon, FileText } from "lucide-react";
+
+const SuccessPage = () => {
+  const searchParams = useSearchParams();
+  const orderNumber = searchParams.get("orderNumber");
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const emailSentRef = useRef(false);
+  const stockUpdatedRef = useRef(false);
+  // const awbGeneratedRef = useRef(false);
+  const clearBasket = useBasketStore((store) => store.clearBasket);
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await fetch(`/orders/${orderNumber}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch order details");
+        }
+
+        const data = await response.json();
+        setOrderDetails(data);
+        console.log("datele comenzii: ", data);
+        // Actualizăm stocul doar dacă nu a fost actualizat deja
+        if (!stockUpdatedRef.current) {
+          const result = await updateProductStock(data.products);
+          if (!result.success) {
+            console.error("Eroare la actualizarea stocului:", result.error);
+          }
+          stockUpdatedRef.current = true;
+        }
+
+        // if (!awbGeneratedRef.current) {
+        //   try {
+        //     const awbNumber = await generateAwb({
+        //       cart: {
+        //         id: data.orderNumber,
+        //         shipping_address: {
+        //           first_name: data.address.firstName.split(" ").slice(0, -1).join(" "),
+        //           last_name: data.address.lastName.split(" ").slice(-1).join(" "),
+        //           phone: data.address.phone,
+        //           email: data.address.email,
+        //           province: data.address.province,
+        //           city: data.address.city,
+        //           address_1: data.address.street,
+        //           postal_code: data.address.postalCode,
+        //         },
+        //       },
+        //     });
+
+        //     console.log("AWB generat cu succes:", awbNumber);
+        //   } catch (error) {
+        //     console.error("Eroare la generarea AWB:", error);
+        //   }
+        //   awbGeneratedRef.current = true;
+        // }
+
+        // Trimite email doar dacă nu a fost trimis anterior
+        if (!emailSentRef.current) {
+          sendEmail(data);
+          emailSentRef.current = true;
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+        clearBasket();
+      }
+    };
+
+    if (orderNumber) {
+      fetchOrderDetails();
+    } else {
+      setError("Order number not found");
+      setLoading(false);
+    }
+  }, [orderNumber]);
+
+  const handleDownloadInvoice = async (orderNumber) => {
+    try {
+      const response = await fetch(`/invoice/${orderNumber}/download`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura_${orderNumber}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+   };
+
+
+   const sendEmail = async (details) => {
+    try {
+      const emailData = {
+        order_id: details.orderNumber,
+        order_awb: details.awb,
+        order_date: new Date().toLocaleDateString(),
+        payment_method: details.paymentType === "card" ? "Card" : "Ramburs",
+        order_total: `${details.totalPrice.toFixed(2)} ${details.currency}`,
+        order_discount: details.discount,
+        order_promo_code: details.promoCode,
+        order_products_total: `${(details.totalPrice - details.shippingCost).toFixed(2)} ${details.currency}`,
+        order_shipping_cost: `${details.shippingCost.toFixed(2)} ${details.currency}`,
+        order_products: details.products.map((product) => (
+          `${product.product.name} - ${
+            product.variant 
+              ? `Curbura: ${product.variant.curbura}, Grosime: ${product.variant.grosime}, Mărime: ${product.variant.marime}` 
+              : "Standard"
+          } - Cantitate: ${product.quantity}`
+        )).join("\n"),
+        client_last_name: details.address.lastName,
+        client_first_name: details.address.firstName,
+        client_email: details.address.email,
+        client_phone: details.address.phone,
+        client_province: details.address.province,
+        client_locality: details.address.city,
+        client_address: details.address.street,
+        invoice_url: details.invoice ? 
+          `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${details.invoice}/download` : 
+          null,
+        client_type: details.billingAddress?.isLegalEntity ? "Persoană Juridică" : "Persoană Fizică",
+        company_name: details.billingAddress?.companyName || "",
+        company_CUI: details.billingAddress?.cui || "",
+        comany_registry: details.billingAddress?.tradeRegisterNumber || "",
+        company_address: details.billingAddress?.companyAddress || "",
+        company_province: details.billingAddress?.companyCounty || "",
+        company_city: details.billingAddress?.companyCity || "",
+        company_postal_code: details.billingAddress?.companyPostalCode || "",
+        company_bank_name: details.billingAddress?.bankName || "",
+        company_IBAN: details.billingAddress?.iban || ""
+      };
+   
+      const notificationData = {
+        client_last_name: details.customerName.split(" ").slice(-1).join(" "),
+        client_first_name: details.customerName.split(" ").slice(0, -1).join(" "),
+        client_email: details.address.email,
+        order_id: details.orderNumber,
+        order_discount: details.discount,
+        order_promo_code: details.promoCode,
+        order_products: emailData.order_products,
+        awb: details.awb,
+        invoice_url: emailData.invoice_url,
+        order_total: emailData.order_total,
+        order_products_total: emailData.order_products_total,
+        order_shipping_cost: emailData.order_shipping_cost,
+      };
+   
+      await Promise.all([
+        emailjs.send("service_5kulkwh", "template_soo87le", emailData, "uSA0IVA9aGhfzQfPC"),
+        emailjs.send("service_5kulkwh", "template_kbk4s1r", notificationData, "uSA0IVA9aGhfzQfPC")
+      ]);
+   
+      console.log("Emailuri trimise cu succes!");
+    } catch (error) {
+      console.error("Eroare la trimiterea emailurilor:", error);
+    }
+   };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Se încarcă...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Eroare: {error}</p>
+      </div>
+    );
+  }
+
+  const {
+    customerName,
+    invoice,
+    email,
+    address,
+    products,
+    totalPrice,
+    shippingCost,
+    currency,
+    paymentType,
+    awb,
+    billingAddress,
+  } = orderDetails;
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <div className="bg-white p-12 rounded-xl shadow-lg max-w-3xl w-full mx-4">
+        <div className="flex justify-center mb-8">
+          <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg
+              className="h-8 w-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+        </div>
+        <h1 className="text-4xl font-bold mb-6 text-center">
+          Mulțumim pentru comandă!
+        </h1>
+        <div className="border-t border-b border-gray-200 py-6 mb-6">
+          <p className="text-lg text-gray-700 mb-4">
+            Comanda ta a fost înregistrată cu succes.
+          </p>
+          {invoice.number && (
+ <button 
+   onClick={() => handleDownloadInvoice(invoice.number)}
+   className="text-blue-600 hover:text-blue-800 flex items-center"
+ >
+   <FileText className="w-4 h-4 mr-2" />
+   Descarcă Factura
+ </button>
+)}
+
+          <div className="space-y-2">
+            <p className="text-gray-600">
+              <strong>Număr comandă:</strong> {orderNumber}
+            </p>
+            <p className="text-gray-600">
+              <strong>Client:</strong> {address.lastName} {address.firstName}
+            </p>
+            <p className="text-gray-600">
+              <strong>Email:</strong> {address.email}
+            </p>
+            <p className="text-gray-600">
+              <strong>Adresă de livrare:</strong>{" "}
+              {`${address.street}, ${address.city}, ${address.province}, ${address.postalCode}`}
+            </p>
+            <p className="text-gray-600">
+              <strong>Metodă de plată:</strong>{" "}
+              {paymentType === "card" ? "Card" : "Ramburs"}
+            </p>
+            <p className="text-gray-600">
+              <strong>AWB: {awb}</strong> {}
+            </p>
+            {billingAddress.cui && (
+              <>
+                <p className="text-gray-600">
+                  <strong>CUI: {billingAddress.cui}</strong> {}
+                </p>
+                <p className="text-gray-600">
+                  <strong>Companie:</strong> {billingAddress.companyName}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Produse comandate</h2>
+          <ul className="space-y-4">
+            {products.map((product) => (
+              <li
+                key={product.product._id}
+                className="flex justify-between items-center"
+              >
+                <div>
+                  <Image
+                    src={imageUrl(product.product.image).url()}
+                    alt={product.product.name}
+                    width={80}
+                    height={80}
+                    className="object-cover rounded"
+                  />
+                  <p className="font-medium text-gray-900 uppercase">
+                    {product.product.name}
+                  </p>
+                  {product.variant ? (
+                    <div className="text-sm text-gray-600 mt-1">
+                      <p>Curbura: {product.variant.curbura}</p>
+                      <p>Grosime: {product.variant.grosime}</p>
+                      <p>Mărime: {product.variant.marime}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 mt-1">Standard</p>
+                  )}
+                  <p className="text-sm text-gray-600">
+                    Cantitate: {product.quantity}
+                  </p>
+                </div>
+                <p className="text-gray-700">
+                  {(product.product.price * product.quantity).toFixed(2)}{" "}
+                  {currency}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="border-t border-gray-200 pt-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-600">Cost livrare:</span>
+            <span className="text-gray-800 font-medium">
+              {shippingCost.toFixed(2)} {currency}
+            </span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-600">Total produse:</span>
+            <span className="text-gray-800 font-medium">
+              {(totalPrice - shippingCost).toFixed(2)} {currency}
+            </span>
+          </div>
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total de plată:</span>
+            <span>
+              {totalPrice.toFixed(2)} {currency}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-4 mt-8">
+          <p className="text-gray-600">A fost trimis un email de confirmare!</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild className="bg-green-600 hover:bg-green-700">
+              <Link href="/comenzi">Vezi detaliile comenzii</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/">Înapoi la magazin</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SuccessPage;
