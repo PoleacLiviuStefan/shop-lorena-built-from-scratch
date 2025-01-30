@@ -1,72 +1,123 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
+import { Product } from "@/sanity.types";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import Link from "next/link";
 import ProductThumb from "@/components/ProductThumb";
 import { cn } from "@/lib/utils";
 import PriceRangeFilter from "./PrinceRangeFilter";
+import { ResolvedCategory } from "@/app/types/category";
 
 const PRODUCTS_PER_PAGE = 12;
 
-const FilteredCategoryProducts = ({
+/** 
+ * We create 'ProductWithRefs' that has a
+ * 'resolvedCategories' array instead of the raw reference array.
+ */
+type ProductWithRefs = Omit<Product, "categories"> & {
+  computedPrice?: number;
+  resolvedCategories?: ResolvedCategory[];
+};
+
+interface FilteredCategoryProductsProps {
+  initialProducts: Product[];
+  initialCategories: ResolvedCategory[];
+  currentSlug: string;
+}
+
+const FilteredCategoryProducts: React.FC<FilteredCategoryProductsProps> = ({
   initialProducts = [],
   initialCategories = [],
   currentSlug = "",
 }) => {
-  const [products] = useState(initialProducts);
-  const [categories] = useState(initialCategories);
-  const [filteredProducts, setFilteredProducts] = useState(initialProducts);
-  const [maxPrice, setMaxPrice] = useState(() =>
-    Math.max(...initialProducts.map((p) => p.price || 0))
+  // 1) Transform each raw Product into a ProductWithRefs
+  const transformProduct = (product: Product): ProductWithRefs => ({
+    ...product,
+    computedPrice: getProductPrice(product),
+    resolvedCategories: product.categories
+      ?.map((catRef) => {
+        const found = initialCategories.find((cat) => cat._id === catRef._ref);
+        if (!found) return undefined;
+        return found;
+      })
+      .filter((cat): cat is ResolvedCategory => cat !== undefined),
+  });
+
+  // 2) Calculate a "lowest price" for each product
+  const getProductPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      const prices = product.variants.map((v) => v.price ?? 0);
+      return Math.min(...prices);
+    }
+    return 0;
+  };
+
+  // 3) Our states
+  const [products] = useState<ProductWithRefs[]>(
+    () => initialProducts.map(transformProduct)
   );
-  const [priceRange, setPriceRange] = useState([0, maxPrice]);
+  const [categories] = useState<ResolvedCategory[]>(initialCategories);
+
+  // Fix: type priceRange as a 2-element tuple
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const maxPrice = Math.max(...initialProducts.map(getProductPrice), 0);
+    return [0, maxPrice];
+  });
+
+  const [filteredProducts, setFilteredProducts] = useState(products);
   const [sortOrder, setSortOrder] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const maxPrice = priceRange[1];
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const resetFilters = () => {
-    setPriceRange([0, maxPrice]);
+    const newMax = Math.max(...products.map((p) => p.computedPrice ?? 0), 0);
+    setPriceRange([0, newMax]);
     setSortOrder("");
     setFilteredProducts(products);
     setCurrentPage(1);
   };
 
   const areFiltersActive = () => {
-    return priceRange[0] > 0 || priceRange[1] < maxPrice || sortOrder !== "";
+    return priceRange[0] > 0 || sortOrder !== "" || priceRange[1] < maxPrice;
   };
 
+  // Re-filter when priceRange or sortOrder changes
   useEffect(() => {
     let result = [...products];
 
-    result = result.filter(
-      (product) =>
-        (product.price || 0) >= priceRange[0] &&
-        (product.price || 0) <= priceRange[1]
-    );
+    // Filter by priceRange
+    result = result.filter((p) => {
+      const price = p.computedPrice ?? 0;
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
 
+    // Sort if needed
     if (sortOrder === "price-asc") {
-      result.sort((a, b) => (a.price || 0) - (b.price || 0));
+      result.sort((a, b) => (a.computedPrice ?? 0) - (b.computedPrice ?? 0));
     } else if (sortOrder === "price-desc") {
-      result.sort((a, b) => (b.price || 0) - (a.price || 0));
+      result.sort((a, b) => (b.computedPrice ?? 0) - (a.computedPrice ?? 0));
     }
 
     setFilteredProducts(result);
     setCurrentPage(1);
   }, [priceRange, sortOrder, products]);
 
+  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE
   );
 
+  // While SSR hydrates
   if (!isClient) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -78,6 +129,7 @@ const FilteredCategoryProducts = ({
   return (
     <div className="container mx-auto px-4">
       <div className="flex flex-col md:flex-row gap-8">
+        {/* Sidebar */}
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className="bg-white p-4 rounded-lg sticky top-24 shadow-sm border">
             <div className="flex justify-between items-center mb-4">
@@ -112,24 +164,22 @@ const FilteredCategoryProducts = ({
                       className={cn(
                         "block px-3 py-2 rounded-md text-sm transition-colors",
                         category.slug.current === currentSlug
-                          ? "bg-black text-black"
+                          ? "bg-black text-white"
                           : "hover:bg-gray-100"
                       )}
                     >
-                      {category.slug.current}
+                      {category.title}
                     </Link>
                   ))}
                 </div>
               </div>
 
               <div className="border-b pb-4">
-     
-                <PriceRangeFilter 
-  maxPrice={maxPrice}
-  priceRange={priceRange}
-  setPriceRange={setPriceRange}
-/>
-
+                <PriceRangeFilter
+                  maxPrice={priceRange[1]}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                />
               </div>
 
               <div>
@@ -148,6 +198,7 @@ const FilteredCategoryProducts = ({
           </div>
         </aside>
 
+        {/* Main content */}
         <main className="flex-grow">
           <div className="flex justify-between items-center mb-6">
             <div className="md:hidden">
@@ -165,14 +216,17 @@ const FilteredCategoryProducts = ({
 
           {filteredProducts.length > 0 ? (
             <>
-              <ul className="grid grid-cols-2 w-full md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-4" data-testid="products-list">
+              <ul
+                className="grid grid-cols-2 w-full md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-4"
+                data-testid="products-list"
+              >
                 {paginatedProducts.map((product) => (
-                  <li key={product._id} className="shadow-sm p-4  hover:shadow-md transition-shadow">
-                    <ProductThumb product={product} />
+                  <li key={product._id} className="shadow-sm p-4 hover:shadow-md transition-shadow">
+                    <ProductThumb product={product as Product} />
                   </li>
                 ))}
               </ul>
-              
+
               {totalPages > 1 && (
                 <div className="flex justify-center space-x-2 mt-8">
                   <button
@@ -187,7 +241,7 @@ const FilteredCategoryProducts = ({
                   >
                     Anterior
                   </button>
-                  
+
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
@@ -202,7 +256,7 @@ const FilteredCategoryProducts = ({
                       {page}
                     </button>
                   ))}
-                  
+
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}

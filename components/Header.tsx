@@ -5,22 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { PackageIcon } from "@sanity/icons";
 import { useState } from "react";
-import useBasketStore from "@/app/(store)/store";
 import Logo from "../public/Imagini/logo.png";
-import { FaMagnifyingGlass } from "react-icons/fa6";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import CartPreview from "./CartPreview";
 import SearchBar from "./SearchBar";
 import HamburgerMenu from "./HamburgerMenu";
-import { auth } from "@clerk/nextjs/server";
 
 const Header = ({ categories }: { categories: { name: string; href: string }[] }) => {
   const { user } = useUser();
-  const itemCount = useBasketStore((state) =>
-    state.items.reduce((total, item) => total + item.quantity, 0)
-  );
+
   const [showCourses, setShowCourses] = useState(false);
-  const [showSearchBar, setShowSearchBar] = useState(false);
+
   const [showCategories, setShowCategories] = useState(false);
   console.log("categories", categories);
   const coursesList = [
@@ -73,7 +68,7 @@ const Header = ({ categories }: { categories: { name: string; href: string }[] }
                   <Image src={Logo} alt="Logo" className="w-[95px] mr-5" />
                 </Link>
                 <div className="flex items-center gap-4">
-                  <SearchBar />
+                  <SearchBar showSearchBar={true} />
                   <div className="flex items-center gap-4">
                     <CartPreview />
                     {user &&

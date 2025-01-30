@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
       }
     ]
   },
-  experimental: {
-    serverComponents: true,
-  },
 };
 
 export default nextConfig;

@@ -43,8 +43,6 @@ export async function POST(req: NextRequest) {
       "info[dimensions][width]": "15", // Lățimea coletului
       clientId: process.env.FAN_COURIER_CLIENT_ID,
     };
-    
-    
 
     console.log("Requesting URL:", baseUrl);
 
@@ -60,26 +58,43 @@ export async function POST(req: NextRequest) {
       status: "success",
       tariff: response.data.data,
     });
-  } catch (error: any) {
-    console.error(
-      "Fan Courier API Error: ",
-      error.response?.data || error.message
-    );
+  } catch (error: unknown) {
+    // Helper function to determine if the error is authentication-related
+    const isAuthError = (err: unknown): boolean => {
+      if (err instanceof Error) {
+        return err.message.includes('autentificare') || err.message.includes('token');
+      }
+      return false;
+    };
 
-    const errorMessage = error.message.includes('autentificare') || error.message.includes('token')
+    // Get the error message safely
+    const getErrorMessage = (err: unknown): string => {
+      if (axios.isAxiosError(err)) {
+        return err.response?.data || err.message;
+      }
+      if (err instanceof Error) {
+        return err.message;
+      }
+      return 'An unknown error occurred';
+    };
+
+    const isAuthenticationError = isAuthError(error);
+    const errorDetails = getErrorMessage(error);
+
+    console.error("Fan Courier API Error:", errorDetails);
+
+    const userErrorMessage = isAuthenticationError
       ? 'Eroare de autentificare FanCourier. Vă rugăm încercați din nou.'
       : 'Calcularea tarifului a eșuat.';
 
     return NextResponse.json(
       {
         status: "error",
-        message: errorMessage,
-        error: error.response?.data || error.message,
+        message: userErrorMessage,
+        error: errorDetails,
       },
       { 
-        status: error.message.includes('autentificare') || error.message.includes('token') 
-          ? 401 
-          : 500 
+        status: isAuthenticationError ? 401 : 500 
       }
     );
   }

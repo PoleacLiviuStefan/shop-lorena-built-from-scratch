@@ -1,4 +1,13 @@
-export default async function getCustomShippingCost(shippingAddress: { shipping_address: { city: string; province: string } }) {
+import type { 
+  ShippingAddress, 
+  ShippingDetails, 
+  TariffResponse, 
+  AwbResponse 
+} from '../app/types/fanCourier';
+
+export default async function getCustomShippingCost(
+  shippingAddress: ShippingAddress
+): Promise<number> {
   if (!shippingAddress.shipping_address?.city || !shippingAddress.shipping_address?.province) {
     throw new Error("Shipping address is incomplete.");
   }
@@ -32,7 +41,7 @@ export default async function getCustomShippingCost(shippingAddress: { shipping_
       throw new Error("Empty response from shipping API.");
     }
 
-    const data = JSON.parse(textResponse);
+    const data = JSON.parse(textResponse) as TariffResponse;
     console.log("Parsed API Response:", data);
 
     if (!data.tariff || typeof data.tariff.total !== "number") {
@@ -46,22 +55,9 @@ export default async function getCustomShippingCost(shippingAddress: { shipping_
   }
 }
 
-export  async function generateAwb(shippingDetails: {
-  cart: {
-    id: string;
-    shipping_address: {
-      first_name: string;
-      last_name: string;
-      phone: string;
-      email: string;
-      province: string;
-      city: string;
-      address_1: string;
-      address_2?: string;
-      postal_code: string;
-    };
-  };
-}) {
+export async function generateAwb(
+  shippingDetails: ShippingDetails
+): Promise<string> {
   if (
     !shippingDetails.cart?.shipping_address?.city ||
     !shippingDetails.cart?.shipping_address?.province
@@ -90,7 +86,7 @@ export  async function generateAwb(shippingDetails: {
       throw new Error(`Failed to generate AWB: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as AwbResponse;
     console.log("Parsed API Response:", data);
 
     if (data.status !== "success" || !data.awbNumber) {

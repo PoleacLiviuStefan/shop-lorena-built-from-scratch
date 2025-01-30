@@ -28,7 +28,7 @@ export default function InteractiveList() {
 
           href="/cursuri"
         >
-          CURSURI PROFESION
+          CURSURI PROFESIONALE
         </Link>
       </li>
       <li className='cursor-pointer text-[14px]'>

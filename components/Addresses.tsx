@@ -6,7 +6,7 @@ import CountySelect from "./CountySelect";
 import LocalitySelect from "./LocalitySelect";
 import useBasketStore from "@/app/(store)/store";
 
-interface AddressFormData {
+interface ShippingFields {
   firstName: string;
   lastName: string;
   email: string;
@@ -15,11 +15,12 @@ interface AddressFormData {
   county: string;
   city: string;
   postalCode: string;
- }
- 
- interface BillingFormData {
+}
+
+interface BillingFields {
+  isLegalEntity: boolean;
   companyName: string;
-  cui: string; 
+  cui: string;
   tradeRegisterNumber: string;
   companyAddress: string;
   companyCity: string;
@@ -27,13 +28,22 @@ interface AddressFormData {
   companyPostalCode: string;
   bankName: string;
   iban: string;
- }
+}
+
+
+ 
+
 
 interface AddressesProps {
   isActive: boolean;
   onComplete: () => void;
   showEditButton?: boolean;
   onEdit?: () => void;
+}
+
+interface FormState {
+  shipping: ShippingFields;
+  billing: BillingFields;
 }
 
 const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesProps) => {
@@ -43,12 +53,15 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
   const savedBillingAddress = useBasketStore((state) => state.billingAddress);
 
   const [isLegalEntity, setIsLegalEntity] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState<AddressFormData | null>(null);
-  const [billingAddress, setBillingAddress] = useState<BillingFormData | null>(null);
+  const [shippingAddress, setShippingAddress] = useState<ShippingFields | null>(null);
+  const [billingAddress, setBillingAddress] = useState<BillingFields | null>(null);
   const [selectedShippingCounty, setSelectedShippingCounty] = useState("");
-  const [selectedBillingCounty, setSelectedBillingCounty] = useState("");
+  // const [selectedBillingCounty, setSelectedBillingCounty] = useState("");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    shipping: ShippingFields;
+    billing: BillingFields;
+  }>({
     shipping: {
       firstName: "",
       lastName: "",
@@ -107,12 +120,16 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
   
       if (savedAddress.province) {
         setSelectedShippingCounty(savedAddress.province);
-        setSelectedBillingCounty(savedAddress.province);
+        // setSelectedBillingCounty(savedAddress.province);
       }
     }
   }, [savedAddress,savedBillingAddress]);
 
-  const handleChange = useCallback((type: "shipping" | "billing", field: keyof (AddressFormData | BillingFormData), value: string) => {
+  const handleChange = useCallback(<T extends keyof FormState>(
+    type: T,
+    field: keyof FormState[T],
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [type]: {
@@ -120,14 +137,13 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
         [field]: value,
         ...(field === "county" ? { city: "" } : {}),
       },
-    }));  
-    console.log("formData este: ", formData);
-    
+    }));
+  
     if (field === "county") {
       if (type === "shipping") {
         setSelectedShippingCounty(value);
-      } else {
-        setSelectedBillingCounty(value);
+      } else if (type === "billing") {
+        // setSelectedBillingCounty(value);
       }
     }
   }, []);
@@ -137,7 +153,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
   
     setShippingAddress(formData.shipping);
     setBillingAddress(formData.billing);
-    console.log("la submit formData este: ", formData);
+  
     setShippingAddressInStore({
       firstName: formData.shipping.firstName,
       lastName: formData.shipping.lastName,
@@ -151,28 +167,19 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
   
     setBillingAddressInStore({
       isLegalEntity,
-      ...(isLegalEntity && {
-        companyName: formData.billing.companyName,
-        cui: formData.billing.cui,
-        tradeRegisterNumber: formData.billing.tradeRegisterNumber,
-        companyAddress: formData.billing.companyAddress,
-        companyCity: formData.billing.companyCity,
-        companyCounty: formData.billing.companyCounty,
-        companyPostalCode: formData.billing.companyPostalCode,
-        bankName: formData.billing.bankName,
-        iban: formData.billing.iban,
-      }),
+      ...(isLegalEntity && formData.billing)
     });
   
     onComplete();
   };
+
   const renderAddressFields = useCallback(
     ({
       type,
       countyValue,
       disabled = false,
     }: {
-      type: "shipping" | "billing";
+      type: "shipping";
       countyValue: string;
       disabled?: boolean;
     }) => (
@@ -181,14 +188,14 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Prenume</label>
             <input
-              type="text"
-              required
-              disabled={disabled}
-              value={formData[type].firstName}
-              onChange={(e) => handleChange(type, "firstName", e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              placeholder="Prenume"
-            />
+  type="text"
+  required
+  disabled={disabled}
+  value={formData[type].firstName}
+  onChange={(e) => handleChange('shipping' as const, 'firstName', e.target.value)}
+  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+  placeholder="Prenume"
+/>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nume</label>
@@ -197,7 +204,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
               required
               disabled={disabled}
               value={formData[type].lastName}
-              onChange={(e) => handleChange(type, "lastName", e.target.value)}
+              onChange={(e) => handleChange('shipping' as const, "lastName", e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="Nume"
             />
@@ -211,7 +218,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
             required
             disabled={disabled}
             value={formData[type].email}
-            onChange={(e) => handleChange(type, "email", e.target.value)}
+            onChange={(e) => handleChange('shipping' as const, "email", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             placeholder="Email"
           />
@@ -224,7 +231,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
             required
             disabled={disabled}
             value={formData[type].phone}
-            onChange={(e) => handleChange(type, "phone", e.target.value)}
+            onChange={(e) => handleChange('shipping' as const, "phone", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             placeholder="Telefon"
           />
@@ -237,7 +244,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
             required
             disabled={disabled}
             value={formData[type].address}
-            onChange={(e) => handleChange(type, "address", e.target.value)}
+            onChange={(e) => handleChange('shipping' as const, "address", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             placeholder="Adresă completă"
           />
@@ -249,7 +256,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
             <CountySelect
               value={formData[type].county}
               disabled={disabled}
-              onChange={(e) => handleChange(type, "county", e.target.value)}
+              onChange={(e) => handleChange('shipping' as const, "county", e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="Selectează județul"
             />
@@ -260,7 +267,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
               county={countyValue}
               disabled={disabled || !formData[type].county}
               value={formData[type].city}
-              onChange={(e) => handleChange(type, "city", e.target.value)}
+              onChange={(e) => handleChange('shipping' as const, "city", e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="Selectează orașul"
             />
@@ -274,7 +281,7 @@ const Addresses = ({ isActive, onComplete, showEditButton, onEdit }: AddressesPr
             required
             disabled={disabled}
             value={formData[type].postalCode}
-            onChange={(e) => handleChange(type, "postalCode", e.target.value)}
+            onChange={(e) => handleChange('shipping' as const, "postalCode", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             placeholder="Cod Poștal"
           />

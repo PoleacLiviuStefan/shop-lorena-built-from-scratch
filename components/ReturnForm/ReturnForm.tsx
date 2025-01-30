@@ -1,15 +1,8 @@
-import { PREFIXES } from "../../constants";
+import { PREFIXES } from "../../app/constants";
 import React, { FormEvent } from "react";
 
 const ReturnForm = () => {
-  interface Prefix {
-    code: string;
-    name: string;
-  }
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-
-    
     e.preventDefault();
     // Adaugă logica de trimitere a formularului aici
     console.log("Formular trimis!");
@@ -68,26 +61,25 @@ const ReturnForm = () => {
           />
         </div>
         <div>
-        <label htmlFor="phone">
-  Număr Telefon
-  <div className="flex gap-2 items-center">
-    <select className="border p-2 rounded-md">
-    {PREFIXES.map(({ code, name }) => (
-    <option key={code} value={code}>
-      {name} ({code})
-    </option>
-  ))}
-    </select>
-    <input
-      type="tel"
-      id="phone"
-      name="phone"
-      className="border p-2 w-full rounded-md"
-      required
-    />
-  </div>
-</label>
-
+          <label htmlFor="phone">
+            Număr Telefon
+            <div className="flex gap-2 items-center">
+              <select className="border p-2 rounded-md">
+                {PREFIXES.map(({ code, name }: {code:string,name:string}) => (
+                  <option key={code} value={code}>
+                    {name} ({code})
+                  </option>
+                ))}
+              </select>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                className="border p-2 w-full rounded-md"
+                required
+              />
+            </div>
+          </label>
         </div>
         <div>
           <label htmlFor="iban" className="block text-sm font-medium text-gray-700">

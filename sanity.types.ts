@@ -68,6 +68,16 @@ export type Geopoint = {
   alt?: number;
 };
 
+export type Course = {
+  _id: string;
+  _type: "course";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  courseName?: string;
+  courseDates?: Array<string>;
+};
+
 export type Sales = {
   _id: string;
   _type: "sales";
@@ -90,12 +100,39 @@ export type Order = {
   _updatedAt: string;
   _rev: string;
   orderNumber?: string;
-  StripeCheckoutSessionId?: string;
-  stripeCustomerId?: string;
-  ClerkUserId?: string;
+  awb?: number;
+  paymentType?: string;
+  status?: "In Asteptare" | "Platita" | "Finalizata" | "Anulata" | "Returnata";
+  orderDate?: string;
+  invoice?: {
+    number?: string;
+    series?: string;
+    url?: string;
+  };
   customerName?: string;
   email?: string;
-  stripePaymentIntentId?: string;
+  address?: {
+    city?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    postalCode?: string;
+    province?: string;
+    street?: string;
+  };
+  billingAddress?: {
+    isLegalEntity?: boolean;
+    companyName?: string;
+    cui?: string;
+    tradeRegisterNumber?: string;
+    companyAddress?: string;
+    companyCity?: string;
+    companyCounty?: string;
+    companyPostalCode?: string;
+    bankName?: string;
+    iban?: string;
+  };
   products?: Array<{
     product?: {
       _ref: string;
@@ -104,12 +141,20 @@ export type Order = {
       [internalGroqTypeReferenceTo]?: "product";
     };
     quantity?: number;
+    variant?: {
+      curbura?: string;
+      grosime?: string;
+      marime?: string;
+      price?: number;
+      stock?: number;
+    };
     _key: string;
   }>;
   totalPrice?: number;
+  discount?: number;
+  promoCode?: string;
+  shippingCost?: number;
   currency?: string;
-  amountDiscount?: number;
-  status?: "In Asteptare" | "In Asteptare" | "Finalizata" | "Analuta" | "Returnata";
 };
 
 export type Product = {
@@ -120,7 +165,7 @@ export type Product = {
   _rev: string;
   name?: string;
   slug?: Slug;
-  image?: {
+  images?: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -129,8 +174,10 @@ export type Product = {
     };
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
+    alt?: string;
     _type: "image";
-  };
+    _key: string;
+  }>;
   description?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -161,7 +208,14 @@ export type Product = {
     _type: "image";
     _key: string;
   }>;
-  price?: number;
+  variants?: Array<{
+    curbura?: "M" | "C" | "D";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "7" | "8" | "9" | "10" | "11" | "12" | "13" | "14" | "15" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }>;
   categories?: Array<{
     _ref: string;
     _type: "reference";
@@ -169,7 +223,6 @@ export type Product = {
     _key: string;
     [internalGroqTypeReferenceTo]?: "category";
   }>;
-  stock?: number;
 };
 
 export type Category = {
@@ -277,7 +330,7 @@ export type SanityImageMetadata = {
   isOpaque?: boolean;
 };
 
-export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityFileAsset | Geopoint | Sales | Order | Product | Category | Slug | BlockContent | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata;
+export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityFileAsset | Geopoint | Course | Sales | Order | Product | Category | Slug | BlockContent | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./sanity/lib/getMyOrders/getMyOders.tsx
 // Variable: My_ORDERS_QUERY
@@ -289,12 +342,39 @@ export type My_ORDERS_QUERYResult = Array<{
   _updatedAt: string;
   _rev: string;
   orderNumber?: string;
-  StripeCheckoutSessionId?: string;
-  stripeCustomerId?: string;
-  ClerkUserId?: string;
+  awb?: number;
+  paymentType?: string;
+  status?: "Anulata" | "Finalizata" | "In Asteptare" | "Platita" | "Returnata";
+  orderDate?: string;
+  invoice?: {
+    number?: string;
+    series?: string;
+    url?: string;
+  };
   customerName?: string;
   email?: string;
-  stripePaymentIntentId?: string;
+  address?: {
+    city?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    postalCode?: string;
+    province?: string;
+    street?: string;
+  };
+  billingAddress?: {
+    isLegalEntity?: boolean;
+    companyName?: string;
+    cui?: string;
+    tradeRegisterNumber?: string;
+    companyAddress?: string;
+    companyCity?: string;
+    companyCounty?: string;
+    companyPostalCode?: string;
+    bankName?: string;
+    iban?: string;
+  };
   products: Array<{
     product: {
       _id: string;
@@ -304,7 +384,7 @@ export type My_ORDERS_QUERYResult = Array<{
       _rev: string;
       name?: string;
       slug?: Slug;
-      image?: {
+      images?: Array<{
         asset?: {
           _ref: string;
           _type: "reference";
@@ -313,8 +393,10 @@ export type My_ORDERS_QUERYResult = Array<{
         };
         hotspot?: SanityImageHotspot;
         crop?: SanityImageCrop;
+        alt?: string;
         _type: "image";
-      };
+        _key: string;
+      }>;
       description?: Array<{
         children?: Array<{
           marks?: Array<string>;
@@ -345,7 +427,14 @@ export type My_ORDERS_QUERYResult = Array<{
         _type: "image";
         _key: string;
       }>;
-      price?: number;
+      variants?: Array<{
+        curbura?: "C" | "D" | "M";
+        grosime?: "0.05" | "0.10" | "0.15";
+        marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+        price?: number;
+        stock?: number;
+        _key: string;
+      }>;
       categories?: Array<{
         _ref: string;
         _type: "reference";
@@ -353,29 +442,35 @@ export type My_ORDERS_QUERYResult = Array<{
         _key: string;
         [internalGroqTypeReferenceTo]?: "category";
       }>;
-      stock?: number;
     } | null;
     quantity?: number;
+    variant?: {
+      curbura?: string;
+      grosime?: string;
+      marime?: string;
+      price?: number;
+      stock?: number;
+    };
     _key: string;
   }> | null;
   totalPrice?: number;
+  discount?: number;
+  promoCode?: string;
+  shippingCost?: number;
   currency?: string;
-  amountDiscount?: number;
-  status?: "Anulata" | "Finalizata" | "In Asteptare" | "Returnata";
 }>;
 
 // Source: ./sanity/lib/products/getAllCategories.ts
 // Variable: ALL_CATEGORIES_QUERY
-// Query: *[                _type == "category"            ] | order(name asc)
+// Query: *[_type == "category"] {  _id,  _type,  _createdAt,  _updatedAt,  _rev,  title,  "slug": slug.current}
 export type ALL_CATEGORIES_QUERYResult = Array<{
   _id: string;
   _type: "category";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  title?: string;
-  slug?: Slug;
-  description?: string;
+  title: string | null;
+  slug: string | null;
 }>;
 
 // Source: ./sanity/lib/products/getAllProducts.ts
@@ -389,7 +484,7 @@ export type ALL_PRODUCTS_QUERYResult = Array<{
   _rev: string;
   name?: string;
   slug?: Slug;
-  image?: {
+  images?: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -398,8 +493,10 @@ export type ALL_PRODUCTS_QUERYResult = Array<{
     };
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
+    alt?: string;
     _type: "image";
-  };
+    _key: string;
+  }>;
   description?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -430,7 +527,14 @@ export type ALL_PRODUCTS_QUERYResult = Array<{
     _type: "image";
     _key: string;
   }>;
-  price?: number;
+  variants?: Array<{
+    curbura?: "C" | "D" | "M";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }>;
   categories?: Array<{
     _ref: string;
     _type: "reference";
@@ -438,7 +542,6 @@ export type ALL_PRODUCTS_QUERYResult = Array<{
     _key: string;
     [internalGroqTypeReferenceTo]?: "category";
   }>;
-  stock?: number;
 }>;
 
 // Source: ./sanity/lib/products/getProductBySlug.ts
@@ -452,7 +555,7 @@ export type PRODUCT_BY_ID_QUERYResult = {
   _rev: string;
   name?: string;
   slug?: Slug;
-  image?: {
+  images?: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -461,8 +564,10 @@ export type PRODUCT_BY_ID_QUERYResult = {
     };
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
+    alt?: string;
     _type: "image";
-  };
+    _key: string;
+  }>;
   description?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -493,7 +598,14 @@ export type PRODUCT_BY_ID_QUERYResult = {
     _type: "image";
     _key: string;
   }>;
-  price?: number;
+  variants?: Array<{
+    curbura?: "C" | "D" | "M";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }>;
   categories?: Array<{
     _ref: string;
     _type: "reference";
@@ -501,7 +613,6 @@ export type PRODUCT_BY_ID_QUERYResult = {
     _key: string;
     [internalGroqTypeReferenceTo]?: "category";
   }>;
-  stock?: number;
 } | null;
 
 // Source: ./sanity/lib/products/getProductsByCategory.ts
@@ -515,7 +626,7 @@ export type PRODUCTS_BY_CATEGORY_QUERYResult = Array<{
   _rev: string;
   name?: string;
   slug?: Slug;
-  image?: {
+  images?: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -524,8 +635,10 @@ export type PRODUCTS_BY_CATEGORY_QUERYResult = Array<{
     };
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
+    alt?: string;
     _type: "image";
-  };
+    _key: string;
+  }>;
   description?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -556,7 +669,14 @@ export type PRODUCTS_BY_CATEGORY_QUERYResult = Array<{
     _type: "image";
     _key: string;
   }>;
-  price?: number;
+  variants?: Array<{
+    curbura?: "C" | "D" | "M";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }>;
   categories?: Array<{
     _ref: string;
     _type: "reference";
@@ -564,7 +684,6 @@ export type PRODUCTS_BY_CATEGORY_QUERYResult = Array<{
     _key: string;
     [internalGroqTypeReferenceTo]?: "category";
   }>;
-  stock?: number;
 }>;
 
 // Source: ./sanity/lib/products/searchProductsByName.ts
@@ -578,7 +697,7 @@ export type PRODUCT_SEARCH_QUERYResult = Array<{
   _rev: string;
   name?: string;
   slug?: Slug;
-  image?: {
+  images?: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -587,8 +706,10 @@ export type PRODUCT_SEARCH_QUERYResult = Array<{
     };
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
+    alt?: string;
     _type: "image";
-  };
+    _key: string;
+  }>;
   description?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -619,7 +740,14 @@ export type PRODUCT_SEARCH_QUERYResult = Array<{
     _type: "image";
     _key: string;
   }>;
-  price?: number;
+  variants?: Array<{
+    curbura?: "C" | "D" | "M";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }>;
   categories?: Array<{
     _ref: string;
     _type: "reference";
@@ -627,24 +755,36 @@ export type PRODUCT_SEARCH_QUERYResult = Array<{
     _key: string;
     [internalGroqTypeReferenceTo]?: "category";
   }>;
-  stock?: number;
 }>;
 
 // Source: ./sanity/lib/sales/getActiveSaleByCouponCode.ts
 // Variable: ACTIVE_SALE_BY_COUPON_CODE_QUERY
-// Query: *[    _type == "sale"    && IsActive == true    && couponCode == $couponCode    ] | order(validFrom desc)[0]
-export type ACTIVE_SALE_BY_COUPON_CODE_QUERYResult = null;
+// Query: *[        _type == "sales"         && isActive == true        && couponCode == $couponCode        && dateTime(now()) >= dateTime(validForm)        && dateTime(now()) <= dateTime(validUntil)    ] | order(validForm desc)[0]
+export type ACTIVE_SALE_BY_COUPON_CODE_QUERYResult = {
+  _id: string;
+  _type: "sales";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  description?: string;
+  discountAmount?: number;
+  couponCode?: string;
+  validForm?: string;
+  validUntil?: string;
+  isActive?: boolean;
+} | null;
 
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
     "\n    *[_type == \"order\" && clerkUserId == $userId] | order(_createdAt desc){\n    ...,\n    products[]{\n      ...,\n      product->\n    }\n  }\n": My_ORDERS_QUERYResult;
-    "\n            *[\n                _type == \"category\"\n            ] | order(name asc)\n        ": ALL_CATEGORIES_QUERYResult;
+    "\n    *[_type == \"category\"] {\n  _id,\n  _type,\n  _createdAt,\n  _updatedAt,\n  _rev,\n  title,\n  \"slug\": slug.current\n}": ALL_CATEGORIES_QUERYResult;
     "\n            *[\n                _type == \"product\"\n            ] | order(name asc)\n        ": ALL_PRODUCTS_QUERYResult;
     "*[\n    _type == \"product\" && slug.current == $slug\n    ] | order(name asc)[0]": PRODUCT_BY_ID_QUERYResult;
     "\n        *[\n            _type == 'product' &&\n            references(*[_type == 'category' && slug.current == $categorySlug]._id)\n        ] | order(name asc)\n        ": PRODUCTS_BY_CATEGORY_QUERYResult;
     "*[\n    _type == \"product\"\n    && name match $searchParam\n    ] | order(name desc)": PRODUCT_SEARCH_QUERYResult;
-    "*[\n    _type == \"sale\"\n    && IsActive == true\n    && couponCode == $couponCode\n    ] | order(validFrom desc)[0]\n      ": ACTIVE_SALE_BY_COUPON_CODE_QUERYResult;
+    "*[\n        _type == \"sales\" \n        && isActive == true\n        && couponCode == $couponCode\n        && dateTime(now()) >= dateTime(validForm)\n        && dateTime(now()) <= dateTime(validUntil)\n    ] | order(validForm desc)[0]": ACTIVE_SALE_BY_COUPON_CODE_QUERYResult;
   }
 }

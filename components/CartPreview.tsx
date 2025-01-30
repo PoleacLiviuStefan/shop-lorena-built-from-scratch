@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -7,10 +7,10 @@ import useBasketStore from '../app/(store)/store';
 import { imageUrl } from '@/lib/imageUrl';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import type { BasketItem } from '../app/(store)/store';
 
 const CartPreview = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(undefined);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const groupedItems = useBasketStore((state) => state.getGroupedItems());
@@ -23,10 +23,7 @@ const CartPreview = () => {
     removeItem(productId, variant);
   };
 
-  const openAndCancel = () => {
-    if (activeTimer) {
-      clearTimeout(activeTimer);
-    }
+  const handleOpen = () => {
     setIsOpen(true);
   };
 
@@ -34,18 +31,13 @@ const CartPreview = () => {
     setIsOpen(false);
   };
 
-  useEffect(() => {
-    return () => {
-      if (activeTimer) {
-        clearTimeout(activeTimer);
-      }
-    };
-  }, [activeTimer]);
-
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         handleClose();
       }
     };
@@ -55,10 +47,10 @@ const CartPreview = () => {
   }, []);
 
   return (
-    <div 
+    <div
       ref={dropdownRef}
       className="relative h-full z-50"
-      onMouseEnter={openAndCancel}
+      onMouseEnter={handleOpen}
       onMouseLeave={handleClose}
     >
       <button className="h-full flex items-center justify-center gap-1 px-2">
@@ -77,7 +69,10 @@ const CartPreview = () => {
         <div className="absolute top-full right-0 bg-white border shadow-lg w-[280px] lg:w-[420px] rounded-lg transition-all duration-200 ease-out transform">
           <div className="p-4 flex items-center justify-between border-b">
             <h3 className="font-semibold">Coș</h3>
-            <button onClick={handleClose} className="lg:hidden text-gray-500 hover:text-black">
+            <button
+              onClick={handleClose}
+              className="lg:hidden text-gray-500 hover:text-black"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -86,12 +81,15 @@ const CartPreview = () => {
             <>
               <div className="max-h-[300px] lg:max-h-[402px] overflow-y-auto px-4">
                 {groupedItems.map((item) => (
-                  <div key={item.product._id} className="py-4 border-b flex gap-4 group">
+                  <div
+                    key={item.product._id}
+                    className="py-4 border-b flex gap-4 group"
+                  >
                     <div className="w-[90px] lg:w-[110px] h-[90px] lg:h-[110px] relative flex-shrink-0">
-                      {item.product.image && (
+                      {item.product.images?.[0] && (
                         <Image
-                          src={imageUrl(item.product.image).url()}
-                          alt={item.product.name || "Imagine Produs"}
+                          src={imageUrl(item.product.images[0]).url()}
+                          alt={item.product.name || 'Imagine Produs'}
                           className="object-cover rounded"
                           fill
                         />
@@ -106,15 +104,17 @@ const CartPreview = () => {
                           <p className="text-sm text-gray-600 mt-1">
                             Bucăți: {item.quantity}
                           </p>
-                          <button 
-                            onClick={() => handleRemove(item.product._id, item.variant)}
+                          <button
+                            onClick={() =>
+                              handleRemove(item.product._id, item.variant)
+                            }
                             className="text-sm text-red-500 hover:text-red-700 mt-1"
                           >
                             Șterge
                           </button>
                         </div>
                         <p className="font-medium">
-                          {(item.product.price * item.quantity).toFixed(2)} lei
+                          {((item.variant?.price ?? 0) * item.quantity).toFixed(2)} lei
                         </p>
                       </div>
                     </div>
@@ -122,20 +122,15 @@ const CartPreview = () => {
                 ))}
               </div>
 
-              <div className=" p-2 lg:p-4 border-t  space-y-2 lg:space-y-4">
+              <div className="p-2 lg:p-4 border-t space-y-2 lg:space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">
                     Total <span className="font-normal text-gray-600">(incl. TVA)</span>
                   </span>
-                  <span className="font-semibold">
-                    {totalPrice.toFixed(2)} lei
-                  </span>
+                  <span className="font-semibold">{totalPrice.toFixed(2)} lei</span>
                 </div>
                 <Link href="/cos" className="block">
-                  <Button 
-                    className="w-full bg-black hover:bg-gray-800" 
-                    onClick={handleClose}
-                  >
+                  <Button className="w-full bg-black hover:bg-gray-800" onClick={handleClose}>
                     Spre coș
                   </Button>
                 </Link>
@@ -148,9 +143,7 @@ const CartPreview = () => {
               </div>
               <p className="text-gray-500">Coșul este gol</p>
               <Link href="/magazin">
-                <Button onClick={handleClose}>
-                  Explorează produse
-                </Button>
+                <Button onClick={handleClose}>Explorează produse</Button>
               </Link>
             </div>
           )}

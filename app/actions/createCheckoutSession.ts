@@ -1,10 +1,41 @@
-'use server'
+"use server";
 
 import stripe from "@/lib/stripe";
-import { BasketItem } from "../(store)/store";
 import { imageUrl } from "@/lib/imageUrl";
 import Stripe from "stripe";
+// import type { BasketItem } from "../../app/store";
 
+/** 
+ * Example extended Product type if your real `sanity.types.ts` 
+ * doesn't have them. Adjust as needed! 
+ */
+export interface Product {
+  _id: string;
+  name?: string;
+  price?: number;            // <--- Must exist if you call item.product.price
+  images?: Array<{          // <--- Or your real image type
+    asset: {
+      _ref: string;
+      _type: "reference";
+    };
+    alt?: string;
+  }>;
+  // ... other product fields
+}
+
+/** 
+ * Each line item is from your basket store, referencing a 'Product' 
+ * plus a quantity. 
+ */
+export type GroupedBasketItem = {
+  product: Product;
+  quantity: number;
+};
+
+/** 
+ * The checkout metadata. Must match the shape 
+ * used in session.metadata or your code for coupons. 
+ */
 export type Metadata = {
   orderNumber: string;
   customerName: string;
@@ -19,46 +50,50 @@ export type Metadata = {
   province: string;
   postalCode: string;
   promoCode: string | null;
-  promoDiscount?: number; // Adăugat promoDiscount
+  promoDiscount?: number;
 };
 
-export type GroupedBasketItem = {
-  product: BasketItem["product"];
-  quantity: number;
-};
-
+/**
+ * Creates a Stripe Checkout Session 
+ * and returns the session URL (string).
+ */
 export async function createCheckoutSession(
   items: GroupedBasketItem[],
-  metadata: Metadata,
-): Promise<string> { // Am schimbat returnul la string pentru URL
+  metadata: Metadata
+): Promise<string> {
   try {
-    const itemsWithoutPrice = items.filter((item) => !item.product.price);
+    // 1) Ensure each product has a price
+    const itemsWithoutPrice = items.filter((item) => item.product.price == null);
     if (itemsWithoutPrice.length > 0) {
-      throw new Error("Unul sau mai multe produse nu au pret");
+      throw new Error("Unul sau mai multe produse nu au preț.");
     }
 
+    // 2) Find existing customer by email or create new
     const customers = await stripe.customers.list({
       email: metadata.customerEmail,
       limit: 1,
     });
+    const customerId: string | undefined = customers.data[0]?.id;
 
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    }
-
+    // 3) Build the success/cancel URLs
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`;
     const cancelUrl = `${baseUrl}/cos`;
 
+    // 4) Transform `promoCode = null` to a string if needed
+    //    especially if you do something like `.toUpperCase()` 
+    const safePromoCode = metadata.promoCode ?? "NOCODE";
+
+    // 5) Create session config
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_creation: customerId ? undefined : "always",
-      customer_email: !customerId ? metadata.customerEmail : undefined,
+      customer_email: customerId ? undefined : metadata.customerEmail,
       metadata: {
         ...metadata,
-        promoCode: metadata.promoCode || '',
-        promoDiscount: metadata.promoDiscount?.toString() || '0',
+        // If Stripe only accepts string metadata
+        promoCode: safePromoCode.toUpperCase(),
+        promoDiscount: String(metadata.promoDiscount ?? 0),
       },
       mode: "payment",
       success_url: successUrl,
@@ -66,15 +101,17 @@ export async function createCheckoutSession(
       line_items: items.map((item) => ({
         price_data: {
           currency: "ron",
+          // product.price is definitely defined now
           unit_amount: Math.round(item.product.price! * 100),
           product_data: {
-            name: item.product.name || "Produs fara nume",
+            name: item.product.name ?? "Produs fără nume",
             description: `ID Produs: ${item.product._id}`,
             metadata: {
               id: item.product._id,
             },
-            images: item.product.image
-              ? [imageUrl(item.product.image).url()]
+            // If you store multiple images in `product.images`
+            images: item.product.images?.[0]
+              ? [imageUrl(item.product.images[0]).url()]
               : undefined,
           },
         },
@@ -82,34 +119,31 @@ export async function createCheckoutSession(
       })),
     };
 
-    // Verificăm dacă avem un cod promoțional valid
+    // 6) If we have a promo code & discount, create a custom coupon
     if (metadata.promoCode && metadata.promoDiscount) {
       try {
-        // Generăm un ID unic pentru cupon
-        const couponId = `${metadata.promoCode.toUpperCase()}_${Date.now()}`;
-        
-        // Creăm cuponul
+        const couponId = `${safePromoCode.toUpperCase()}_${Date.now()}`;
         const coupon = await stripe.coupons.create({
           id: couponId,
           percent_off: metadata.promoDiscount,
-          duration: 'once',
+          duration: "once",
         });
-
-        // Adăugăm discount-ul la sesiune
-        sessionConfig.discounts = [{
-          coupon: coupon.id,
-        }];
+        sessionConfig.discounts = [{ coupon: coupon.id }];
       } catch (error) {
-        console.error('Eroare la crearea cuponului:', error);
-        // Dacă eșuează crearea cuponului, permitem coduri promoționale native
+        console.error("Eroare la crearea cuponului:", error);
+        // Fallback to allowing promotion codes in Stripe
         sessionConfig.allow_promotion_codes = true;
       }
     } else {
-      // Dacă nu avem cod promoțional, permitem coduri native Stripe
+      // No promo code => allow manual promotion codes
       sessionConfig.allow_promotion_codes = true;
     }
 
+    // 7) Create session in Stripe
     const session = await stripe.checkout.sessions.create(sessionConfig);
+    if (!session.url) {
+      throw new Error("Stripe a returnat un URL de sesiune invalid.");
+    }
     return session.url;
   } catch (error) {
     console.error("Eroare la crearea sesiunii de checkout:", error);

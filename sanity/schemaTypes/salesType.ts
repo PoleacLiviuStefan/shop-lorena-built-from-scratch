@@ -4,7 +4,7 @@ import { defineField, defineType } from "sanity";
 
 export const salesType = defineType({
     name: "sales",
-    title: "Sales",
+    title: "Promotii",
     type: "document",
     icon: TagIcon,
     fields: [

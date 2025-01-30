@@ -8,9 +8,16 @@ import type { PaymentMethod } from "../app/(store)/store";
 interface PaymentProps {
   isActive: boolean;
   onComplete: () => void;
+  showEditButton?: boolean; // optional if sometimes missing
+  onEdit?: () => void;      // optional if sometimes missing
 }
 
-const Payment = ({  isActive, onComplete, showEditButton, onEdit}: PaymentProps) => {
+const Payment =  ({  
+  isActive, 
+  onComplete, 
+  showEditButton, 
+  onEdit
+}: PaymentProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   

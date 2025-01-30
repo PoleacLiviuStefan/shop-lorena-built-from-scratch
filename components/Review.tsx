@@ -1,50 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import useBasketStore from "@/app/(store)/store";
 import { useRouter } from "next/navigation";
-import { createCheckoutSession } from "@/app/actions/createCheckoutSession";
+import { createCheckoutSession } from "../app/actions/createCheckoutSession";
+import type { Metadata } from "../app/actions/createCheckoutSession";
 import { generateAwb } from "@/lib/fanCourier";
+import type { PaymentMethod, BasketItem, Address, BillingAddress } from "@/app/(store)/store";
+
+interface StoreData {
+  paymentMethod: PaymentMethod;
+  groupedItems: BasketItem[];
+  shippingAddress: Address | null;
+  billingAddress: BillingAddress | null;
+  shippingCost: number;
+  promoCode: string | null;
+  promoDiscount: number;
+  awb: string;
+}
 
 interface ReviewProps {
   isActive: boolean;
-  cart: any[];
 }
 
-const Review = ({ isActive, cart }: ReviewProps) => {
+const Review: React.FC<ReviewProps> = ({ isActive }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
-  // State pentru datele din store și cod promoțional
-  const [storeData, setStoreData] = useState({
+  const [storeData, setStoreData] = useState<StoreData>({
     paymentMethod: null,
     groupedItems: [],
     shippingAddress: null,
-    billingAddress: null, // Adăugat aici
-    shippingCost: 0,  
+    billingAddress: null,
+    shippingCost: 0,
     promoCode: null,
     promoDiscount: 0,
-    awb:""
+    awb: "",
   });
-
-  // Hidratăm datele după montarea componentei
-  useEffect(() => {
-    const store = useBasketStore.getState();
-    setStoreData({
-      paymentMethod: store.paymentMethod,
-      groupedItems: store.getGroupedItems(),
-      shippingAddress: store.shippingAddress,
-      billingAddress: store.billingAddress, // Adăugat aici
-      shippingCost: store.shippingCost || 0,
-      promoCode: store.promoCode || null,
-      promoDiscount: store.promoDiscount || 0,
-    });
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const store = useBasketStore.getState();
@@ -56,61 +52,83 @@ const Review = ({ isActive, cart }: ReviewProps) => {
       shippingCost: store.shippingCost || 0,
       promoCode: store.promoCode || null,
       promoDiscount: store.promoDiscount || 0,
+      awb: "",
     });
-  }, [useBasketStore((state) => state.shippingAddress), useBasketStore((state) => state.billingAddress)]); // Adaugă dependențe pentru re-render
-  
+    setMounted(true);
+  }, []);
+
+  const shippingAddressInStore = useBasketStore((s) => s.shippingAddress);
+  const billingAddressInStore = useBasketStore((s) => s.billingAddress);
+  const shippingCostInStore = useBasketStore((s) => s.shippingCost);
+  const promoCodeInStore = useBasketStore((s) => s.promoCode);
+  const promoDiscountInStore = useBasketStore((s) => s.promoDiscount);
+
+  useEffect(() => {
+    const store = useBasketStore.getState();
+    setStoreData((prev) => ({
+      ...prev,
+      shippingAddress: store.shippingAddress,
+      billingAddress: store.billingAddress,
+      shippingCost: store.shippingCost || 0,
+      promoCode: store.promoCode || null,
+      promoDiscount: store.promoDiscount || 0,
+    }));
+  }, [
+    shippingAddressInStore,
+    billingAddressInStore,
+    shippingCostInStore,
+    promoCodeInStore,
+    promoDiscountInStore,
+  ]);
 
   const handleCheckout = async () => {
-    if (!isSignedIn) {
-      console.error("User is not signed in.");
-      return;
-    }
-
-    if (!storeData.paymentMethod) {
-      console.error("No payment method selected.");
-      return;
-    }
-
-    if (storeData.groupedItems.length === 0) {
-      console.error("Cart is empty.");
-      return;
-    }
-
-    if (!storeData.shippingAddress) {
-      console.error("Shipping address is missing.");
+    if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
+      console.error("Date lipsă pentru checkout");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      console.log("storeData.paymentMethod", storeData.paymentMethod);
-      console.log("user este:", user);
-
       if (storeData.paymentMethod === "card") {
-        const metadata = {
+        const metadata: Metadata = {
           orderNumber: crypto.randomUUID(),
-          customerName: user?.fullName ?? "Necunoscut",
-          customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Necunoscut",
-          clerkUserId: user!.id,
+          customerName: user?.fullName ?? "Unknown",
+          customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
+          clerkUserId: user?.id ?? "",
+          shippingCost: storeData.shippingCost.toString(),
+          firstName: storeData.shippingAddress.firstName,
+          lastName: storeData.shippingAddress.lastName,
+          phone: storeData.shippingAddress.phone,
+          street: storeData.shippingAddress.street,
+          city: storeData.shippingAddress.city,
+          province: storeData.shippingAddress.province,
+          postalCode: storeData.shippingAddress.postalCode,
           promoCode: storeData.promoCode,
-          promoDiscount: storeData.promoDiscount
+          promoDiscount: storeData.promoDiscount,
         };
 
-        const checkoutUrl = await createCheckoutSession(
-          storeData.groupedItems,
-          metadata,
-          storeData.promoCode
-        );
+        const transformedItems = storeData.groupedItems.map((item) => ({
+          ...item,
+          product: {
+            ...item.product,
+            images: item.product.images?.map((image) => ({
+              asset: {
+                _ref: image.asset?._ref || "",
+                _type: image.asset?._type || "reference",
+              },
+              alt: image.alt,
+            })),
+          },
+        }));
 
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-        }
+        const checkoutUrl = await createCheckoutSession(transformedItems, metadata);
+        if (checkoutUrl) window.location.href = checkoutUrl;
       } else {
         await handleCashOnDelivery();
       }
-    } catch (error) {
-      console.error("Error during checkout:", error);
+    } catch (err) {
+      console.error("Eroare la checkout:", err);
     } finally {
       setIsLoading(false);
     }
@@ -119,31 +137,32 @@ const Review = ({ isActive, cart }: ReviewProps) => {
   const handleCashOnDelivery = async () => {
     try {
       const orderNumber = crypto.randomUUID();
-      const subtotal = storeData.groupedItems.reduce(
-        (total, item) => total + (item.product.price ?? 0) * item.quantity,
-        0
-      );
-      const discountAmount = storeData.promoDiscount ? (subtotal * storeData.promoDiscount) / 100 : 0;
+      const subtotal = storeData.groupedItems.reduce((total, item) => {
+        return total + (item.variant?.price ?? 0) * item.quantity;
+      }, 0);
+
+      const discountAmount = storeData.promoDiscount
+        ? (subtotal * storeData.promoDiscount) / 100
+        : 0;
       const finalTotal = subtotal - discountAmount + storeData.shippingCost;
-  
-      // Generate AWB
+
       const awbNumber = await generateAwb({
         cart: {
           id: orderNumber,
           shipping_address: {
-            first_name: storeData.shippingAddress.firstName,
-            last_name: storeData.shippingAddress.lastName,
-            phone: storeData.shippingAddress.phone,
+            first_name: storeData.shippingAddress?.firstName || "",
+            last_name: storeData.shippingAddress?.lastName || "",
+            phone: storeData.shippingAddress?.phone || "",
             email: user?.emailAddresses[0]?.emailAddress ?? "",
-            province: storeData.shippingAddress.province,
-            city: storeData.shippingAddress.city,
-            address_1: storeData.shippingAddress.street,
-            address_2: storeData.shippingAddress.streetNo,
-            postal_code: storeData.shippingAddress.postalCode,
+            province: storeData.shippingAddress?.province || "",
+            city: storeData.shippingAddress?.city || "",
+            address_1: storeData.shippingAddress?.street || "",
+            address_2: "",
+            postal_code: storeData.shippingAddress?.postalCode || "",
           },
         },
       });
-      console.log("storeData este:", storeData);
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cash-on-delivery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,19 +170,21 @@ const Review = ({ isActive, cart }: ReviewProps) => {
           orderNumber,
           customerName: user?.fullName ?? "Unknown",
           customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
-          clerkUserId: user!.id,
+          clerkUserId: user?.id,
           products: storeData.groupedItems.map((item) => ({
             productId: item.product._id,
-            name: item.product.name,        // Adăugat numele produsului
-            price: item.variant?.price || item.product.price, // Preț din variantă sau din produs
+            name: item.product.name,
+            price: item.variant?.price ?? 0,
             quantity: item.quantity,
-            variant: item.variant ? {
-              curbura: item.variant.curbura,
-              grosime: item.variant.grosime,
-              marime: item.variant.marime,
-              price: item.variant.price,
-              stock: item.variant.stock,
-            } : null,
+            variant: item.variant
+              ? {
+                  curbura: item.variant.curbura,
+                  grosime: item.variant.grosime,
+                  marime: item.variant.marime,
+                  price: item.variant.price,
+                  stock: item.variant.stock,
+                }
+              : null,
           })),
           promoCode: storeData.promoCode,
           discount: storeData.promoDiscount,
@@ -174,23 +195,18 @@ const Review = ({ isActive, cart }: ReviewProps) => {
           currency: "RON",
           address: storeData.shippingAddress,
           billingAddress: storeData.billingAddress,
-          awb: awbNumber
+          awb: awbNumber,
         }),
       });
-  
-  
-      if (!response.ok) throw new Error("Error processing cash-on-delivery order.");
-  
-      const data = await response.json();
+
+      if (!response.ok) throw new Error("Eroare procesare comandă ramburs");
       router.push(`/success?orderNumber=${orderNumber}`);
-    } catch (error) {
-      console.error("Error handling cash-on-delivery:", error);
+    } catch (err) {
+      console.error("Eroare la ramburs:", err);
     }
   };
-  // Nu renderăm nimic până când componenta nu e montată
-  if (!mounted) {
-    return null;
-  }
+
+  if (!mounted || !isActive) return null;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -198,7 +214,6 @@ const Review = ({ isActive, cart }: ReviewProps) => {
         <h2 className="text-2xl font-bold">Finalizare Comandă</h2>
       </div>
 
-      {/* Afișăm informații despre reducere dacă există */}
       {storeData.promoCode && storeData.promoDiscount > 0 && (
         <div className="mb-4 p-3 bg-green-50 rounded-lg">
           <p className="text-green-700 text-sm">
@@ -208,11 +223,12 @@ const Review = ({ isActive, cart }: ReviewProps) => {
       )}
 
       <p className="lg:text-[14px] text-[12px]">
-        Făcând clic pe butonul „Plasează Comanda", confirmați că ați citit,
-        înțeles și acceptat Termenii de Utilizare, Termenii de Vânzare și
+        Făcând clic pe butonul &quot;Plasează Comanda&quot;, confirmați că ați
+        citit, înțeles și acceptat Termenii de Utilizare, Termenii de Vânzare și
         Politica de Retur și recunoașteți că ați citit Politica de
         Confidențialitate a magazinului LorenaLash.
       </p>
+
       <button
         onClick={handleCheckout}
         disabled={isLoading}

@@ -31,14 +31,14 @@ const CheckoutSummary = () => {
   const [availablePromoCodes, setAvailablePromoCodes] = useState<{[key: string]: number}>({});
   const { isSignedIn } = useAuth();
 
-  const handleCheckoutClick = (e) => {
-    if (!isSignedIn) {
-      e.preventDefault();
-      // Show sign-in dialog
-      return;
-    }
-    // Continue to checkout
-  };
+  // const handleCheckoutClick = (e) => {
+  //   if (!isSignedIn) {
+  //     e.preventDefault();
+  //     // Show sign-in dialog
+  //     return;
+  //   }
+  //   // Continue to checkout
+  // };
 
   useEffect(() => {
   const fetchPromoCodes = async () => {
@@ -177,10 +177,10 @@ const handleRemovePromo = () => {
           groupedItems.map((item) => (
             <div key={item.product._id} className="flex items-center justify-between border-b pb-2">
               <div className="flex items-center gap-4">
-                {item.product.image && (
+                {item.product.images?.[0] && (
                   <div className="w-16 h-16 relative flex-shrink-0">
                     <Image
-                      src={imageUrl(item.product.image).url()}
+                      src={imageUrl(item.product.images?.[0]).url()}
                       alt={item.product.name || 'Imagine Produs'}
                       className="object-cover rounded"
                       fill
@@ -202,7 +202,7 @@ const handleRemovePromo = () => {
 </div>
               </div>
               <p className="font-medium">
-                {(item.product.price * item.quantity).toFixed(2)} lei
+              {((item.variant?.price ?? 0) * item.quantity).toFixed(2)} lei
               </p>
             </div>
           ))

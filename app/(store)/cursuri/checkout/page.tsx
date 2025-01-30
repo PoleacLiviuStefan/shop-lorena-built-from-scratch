@@ -3,8 +3,15 @@ import React, { useState, useEffect } from "react"
 import {  Stripe,loadStripe } from "@stripe/stripe-js"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-import getDateInfo from "../../../../../lib/util/transform-date"
 
+interface FormData {
+  user_nume: string;
+  user_prenume: string;
+  user_telefon: string;
+  user_email: string;
+  user_adresa: string;
+  mentiuni_speciale: string;
+}
 
 let stripePromise: Promise<Stripe | null>;
 
@@ -17,8 +24,8 @@ const getStripe = (): Promise<Stripe | null> => {
 
 const Buy = () => {
   const [curs, setCurs] = useState<string | null>(localStorage.getItem("cumparaCurs"))
-  const [coursesInfo, setCoursesInfo] = useState([])
-  const [formData, setFormData] = useState({
+  // const [coursesInfo, setCoursesInfo] = useState([])
+  const [formData, setFormData] = useState<FormData>({
     user_nume: '',
     user_prenume: '',
     user_telefon: '',
@@ -123,7 +130,7 @@ const Buy = () => {
 
       const result = await response.json()
       console.log("result", result.courses)
-      setCoursesInfo(result.courses)
+      // setCoursesInfo(result.courses)
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error fetching available dates:", error.message);
@@ -242,31 +249,44 @@ const Buy = () => {
     }
   }, [curs])
 
-  const item = {
-    price: pretCursSelectat,
-    quantity: 1,
-  }
+  // const item = {
+  //   price: pretCursSelectat,
+  //   quantity: 1,
+  // }
 
-  const checkoutOptions = {
-    lineItems: [item],
-    mode: "payment",
-    successUrl: `https://lorenalash.ro/success`, //http://localhost:3000/success
-    cancelUrl: `https://lorenalash.ro/cancel`, //http://localhost:3000/cancel
-  }
+  // const checkoutOptions = {
+  //   lineItems: [item],
+  //   mode: "payment",
+  //   successUrl: `https://lorenalash.ro/success`, //http://localhost:3000/success
+  //   cancelUrl: `https://lorenalash.ro/cancel`, //http://localhost:3000/cancel
+  // }
 
   const sendForm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { name, value } = e.target;
+
+    // Get the form element
+    const form = e.currentTarget;
+    const formElements = form.elements as HTMLFormControlsCollection;
+    
+    // Create a new FormData object
+    const newFormData: Record<string, string> = {};
+    
+    // Update form data
+    Object.keys(formData).forEach((key) => {
+      const element = formElements.namedItem(key) as HTMLInputElement;
+      if (element) {
+        newFormData[key] = element.value;
+        localStorage.setItem(key, element.value);
+      }
+    });
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      ...newFormData
     }));
+    
     sessionStorage.setItem('payment_intent', 'processing');
 
-    formData.forEach((value, name) => {
-      localStorage.setItem(name, value.toString());
-    });
-  
     try {
       await redirectToCheckout();
     } catch (error) {

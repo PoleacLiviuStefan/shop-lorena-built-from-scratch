@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import Hero from "@/components/Hero/Hero";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { createCheckoutSessionCourse } from "@/app/actions/createCheckoutSessionCourse";
-import { useRouter } from "next/navigation";
-import { clerkClient } from '@clerk/clerk-sdk-node';
+
+
+interface OnlineCourseClientProps {
+  hasAccess: boolean;
+}
 
 const CourseContent = () => (
  <div className="flex flex-col items-center w-full max-w-4xl px-4">
@@ -38,32 +41,33 @@ const CourseContent = () => (
  </div>
 );
 
-export default function OnlineCourseClient({hasAccess=false}) {
- const { userId } = useAuth();
- const router = useRouter();
 
-  console.log("userId: ", userId);
- const handlePurchase = async () => {
-   try {
-    const checkoutUrl = await createCheckoutSessionCourse({
-      priceId: "price_1QlVh8CV1XqGrlRbwSXDWRRn",
-      successUrl: `/cursuri/online`,
-      cancelUrl: `/cursuri/online`,
-      metadata: { 
-        userId,
-        isCourse: true
+
+export default function OnlineCourseClient({ hasAccess = false }: OnlineCourseClientProps) {
+  const { userId } = useAuth();
+
+  const handlePurchase = async () => {
+    // Convert undefined to null for the metadata
+    const userIdForMetadata: string | null = userId ?? null;
+
+    try {
+      const checkoutUrl = await createCheckoutSessionCourse({
+        priceId: "price_1QlVh8CV1XqGrlRbwSXDWRRn",
+        successUrl: `/cursuri/online`,
+        cancelUrl: `/cursuri/online`,
+        metadata: { 
+          userId: userIdForMetadata,
+          isCourse: true
+        }
+      });
+      
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       }
-    });
-    
-     
-     if (checkoutUrl) {
-       window.location.href = checkoutUrl;
-     }
-   } catch (error) {
-     console.error('Error creating checkout session:', error);
-
-   }
- };
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+    }
+  };
 
  return (
    <div className="flex flex-col items-center min-h-screen bg-gray-50">

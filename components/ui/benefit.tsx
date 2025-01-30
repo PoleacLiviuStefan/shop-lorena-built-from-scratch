@@ -2,7 +2,7 @@
 import Image from "next/image"
 import Link from "next/link";
 
-const Benefit = ({ iconSrc, name, path }) => {
+const Benefit = ({ iconSrc, name, path } : {iconSrc:string, name:string, path:string}) => {
   return (
     <Link href={`/categorii/${path}`}>
       <div className="flex flex-col items-center text-center transition-transform duration-300 ease-in-out  hover:scale-[1.1] hover:-mt-3 z-10">

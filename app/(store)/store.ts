@@ -41,7 +41,13 @@ export interface BasketItem {
     stock: number;
   };
 }
-
+interface ProductVariant {
+  curbura: string;
+  grosime: string;
+  marime: string;
+  price: number;
+  stock: number;
+}
 interface OrderSummary {
   subtotal: number;
   shipping: number;
@@ -70,7 +76,7 @@ interface BasketState {
   clearUserId: () => void;
 
   // Basket Management
-  addItem: (product: Product, variant?: BasketItem['variant']) => void;
+  addItem: (product: Product, variant?: BasketItem['variant'], quantity?: number) => void;
   removeItem: (productId: string, variant?: BasketItem['variant']) => void;
   updateQuantity: (productId: string, quantity: number, variant?: BasketItem['variant']) => void;
   clearBasket: () => void;
@@ -134,7 +140,7 @@ const useBasketStore = create<BasketState>()(
       // Basket Management
       addItem: (product, variant, quantity = 1) =>
         set((state) => {
-          const isSameVariant = (variant1: any, variant2: any) => {
+          const isSameVariant = (variant1: ProductVariant | undefined, variant2: ProductVariant | undefined) => {
             if (!variant1 && !variant2) return true;
             if (!variant1 || !variant2) return false;
             return (
@@ -150,7 +156,7 @@ const useBasketStore = create<BasketState>()(
               isSameVariant(item.variant, variant)
           );
       
-          const availableStock = variant?.stock ?? product.stock;
+          const availableStock = variant?.stock  ?? 0;
           const currentQuantity = existingItem ? existingItem.quantity : 0;
           const newQuantity = currentQuantity + quantity;  // Modificat aici
       
@@ -194,7 +200,7 @@ const useBasketStore = create<BasketState>()(
 
       removeItem: (productId, variant) =>
         set((state) => {
-          const isSameVariant = (variant1: any, variant2: any) => {
+          const isSameVariant = (variant1: ProductVariant | undefined, variant2: ProductVariant | undefined) => {
             if (!variant1 && !variant2) return true;
             if (!variant1 || !variant2) return false;
             return (
@@ -218,7 +224,7 @@ const useBasketStore = create<BasketState>()(
 
       updateQuantity: (productId, quantity, variant) =>
         set((state) => {
-          const isSameVariant = (variant1: any, variant2: any) => {
+          const isSameVariant = (variant1: ProductVariant | undefined, variant2: ProductVariant | undefined) => {
             if (!variant1 && !variant2) return true;
             if (!variant1 || !variant2) return false;
             return (
@@ -235,7 +241,7 @@ const useBasketStore = create<BasketState>()(
           );
 
           if (targetItem) {
-            const availableStock = targetItem.variant?.stock ?? targetItem.product.stock;
+            const availableStock = targetItem.variant?.stock ?? 0;
             
             if (quantity > availableStock) {
               set({ error: "Cantitatea solicitată depășește stocul disponibil" });
@@ -264,7 +270,7 @@ const useBasketStore = create<BasketState>()(
         const subtotal = items.reduce(
           (total, item) =>
             total +
-            (item.variant?.price ?? item.product.price ?? 0) * item.quantity,
+            (item.variant?.price  ?? 0) * item.quantity,
           0
         );
         const shippingCost = get().shippingCost ?? 0;
@@ -284,7 +290,7 @@ const useBasketStore = create<BasketState>()(
         const subtotal = items.reduce(
           (total, item) =>
             total +
-            (item.variant?.price ?? item.product.price ?? 0) * item.quantity,
+            (item.variant?.price  ?? 0) * item.quantity,
           0
         );
         const shipping = get().shippingCost ?? 0;

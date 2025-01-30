@@ -2,10 +2,7 @@ import { PREFIXES } from "../app/constants";
 import React, { FormEvent } from "react";
 
 const ReturnForm = () => {
-  interface Prefix {
-    code: string;
-    name: string;
-  }
+
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 

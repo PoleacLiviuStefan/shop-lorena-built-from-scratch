@@ -8,6 +8,8 @@ import Review from './Review';
 import useBasketStore from '@/app/(store)/store';
 import { Skeleton } from '@/components/ui/skeleton';
 
+
+
 const CheckoutFormSkeleton = () => {
   return (
     <div className="w-full grid grid-cols-1 gap-y-8">
@@ -68,7 +70,7 @@ const CheckoutFormSkeleton = () => {
 };
 
 const CheckoutForm = () => {
-  const cart = useBasketStore((state) => state.items);
+  // const cart = useBasketStore((state) => state.items);
   const currentStep = useBasketStore((state) => state.currentStep);
   const setCheckoutStep = useBasketStore((state) => state.setCheckoutStep);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,18 +117,19 @@ const CheckoutForm = () => {
       </div>
 
       <div>
-        <Payment 
-          isActive={currentStep === 'payment'}
-          onComplete={() => setCheckoutStep('review')}
-          showEditButton={isStepCompleted('payment')}
-          onEdit={() => setCheckoutStep('payment')}
-        />
+      <Payment 
+  isActive={currentStep === 'payment'}
+  onComplete={() => setCheckoutStep('review')}
+  showEditButton={isStepCompleted('payment')}
+  onEdit={() => setCheckoutStep('payment')}
+/>
+
       </div>
 
       <div>
         <Review 
           isActive={currentStep === 'review'}
-          cart={cart}
+      
         />
       </div>
     </div>

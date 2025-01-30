@@ -2,15 +2,27 @@
 import OnlineCourseClient from '@/components/OnlineCourseClient';
 import { clerkClient } from '@clerk/clerk-sdk-node';
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+
+// Type for user metadata
+type UserMetadata = {
+  hasCourseAccess?: boolean;
+};
 
 export default async function OnlineCoursePage() {
   const { userId } = await auth();
 
- 
-  const user = userId ? await clerkClient.users.getUser(userId) : null;
- 
-  // if (!userId) redirect("/");
+  // Get user and check for course access with proper type checking
+  let hasAccess = false;
   
-  return <OnlineCourseClient hasAccess={!userId ? false : user.publicMetadata.hasCourseAccess} />;
+  if (userId) {
+    try {
+      const user = await clerkClient.users.getUser(userId);
+      const metadata = user.publicMetadata as UserMetadata;
+      hasAccess = metadata.hasCourseAccess ?? false;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  }
+  
+  return <OnlineCourseClient hasAccess={hasAccess} />;
 }

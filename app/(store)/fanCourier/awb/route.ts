@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import { getTokenFromDatabase } from '@/sanity/lib/getTokenFromDatabase/getTokenFromDatabase';
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   try {
     // Obține token-ul Fan Courier
     let token;
@@ -39,7 +39,7 @@ export async function POST(req) {
 
     // Structura corectă pentru detaliile AWB
     const awbDetails = {
-      clientId: process.env.FAN_COURIER_CLIENT_ID, // Move this inside awbDetails
+      clientId: process.env.FAN_COURIER_CLIENT_ID,
       shipments: [{
         info: {
           service: "Standard",
@@ -49,7 +49,7 @@ export async function POST(req) {
           observation: "Observație test",
           content: `Comanda ${cart.id}`,
           dimensions: { length: 10, height: 20, width: 30 },
-          costCenter: "DEP IT", // Change from DEP LOGISTICS
+          costCenter: "DEP IT",
           options: ["X"]
         },
         recipient: {
@@ -59,8 +59,8 @@ export async function POST(req) {
           address: {
             county: cart.shipping_address.province ?? "",
             locality: cart.shipping_address.city ?? "",
-            street: cart.shipping_address.address_1 ?? "", // Use parsed street
-            streetNo: cart.shipping_address.address_2 ?? "", // Use parsed streetNo
+            street: cart.shipping_address.address_1 ?? "",
+            streetNo: cart.shipping_address.address_2 ?? "",
             zipCode: cart.shipping_address.postal_code ?? ""
           }
         }
@@ -83,8 +83,9 @@ export async function POST(req) {
       throw new Error("Datele pentru AWB sunt incomplete.");
     }
     console.log("awb details sunt: ", awbDetails);
+    
     // Trimitere request către API Fan Courier
-    const response = await axios.post("https://api.fancourier.ro/intern-awb",  awbDetails, {
+    const response = await axios.post("https://api.fancourier.ro/intern-awb", awbDetails, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -101,13 +102,16 @@ export async function POST(req) {
       status: "success",
       awbNumber: apiResponse.response[0].awbNumber,
     });
-  } catch (error) {
-    console.error("Eroare:", error.message);
+  } catch (error: unknown) {  // Changed from string | null to unknown
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    const errorDetails = axios.isAxiosError(error) ? error.response?.data : null;
+    
+    console.error("Eroare:", errorMessage);
     return NextResponse.json(
       {
         status: "error",
-        message: error.message,
-        details: error.response?.data || null,
+        message: errorMessage,
+        details: errorDetails,
       },
       { status: 500 }
     );

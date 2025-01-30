@@ -9,18 +9,69 @@ import useBasketStore from "../store";
 import { imageUrl } from "@/lib/imageUrl";
 import Image from "next/image";
 import { updateProductStock } from "@/lib/updateProductStock";
-import { generateAwb } from "@/lib/fanCourier";
-import { FileIcon, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
+
+interface BillingAddress {
+  isLegalEntity: boolean;
+  companyName?: string;
+  cui?: string;
+  tradeRegisterNumber?: string;
+  companyAddress?: string;
+  companyCounty?: string;
+  companyCity?: string;
+  companyPostalCode?: string;
+  bankName?: string;
+  iban?: string;
+}
+
+interface OrderDetails {
+  orderNumber: string;
+  awb?: string;
+  totalPrice: number;
+  currency: string;
+  paymentType: string;
+  customerName: string;
+  discount?: number;
+  promoCode?: string;
+  shippingCost: number;
+  invoice?: {
+    number: string;
+  };
+  address: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    street: string;
+    city: string;
+    province: string;
+    postalCode: string;
+  };
+  products: Array<{
+    product: {
+      _id: string;
+      name: string;
+      price: number;
+      image: string;
+    };
+    variant?: {
+      curbura: string;
+      grosime: string;
+      marime: string;
+    };
+    quantity: number;
+  }>;
+  billingAddress?: BillingAddress;
+}
 
 const SuccessPage = () => {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
-  const [orderDetails, setOrderDetails] = useState(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const emailSentRef = useRef(false);
   const stockUpdatedRef = useRef(false);
-  // const awbGeneratedRef = useRef(false);
   const clearBasket = useBasketStore((store) => store.clearBasket);
 
   useEffect(() => {
@@ -39,8 +90,7 @@ const SuccessPage = () => {
 
         const data = await response.json();
         setOrderDetails(data);
-        console.log("datele comenzii: ", data);
-        // Actualizăm stocul doar dacă nu a fost actualizat deja
+        
         if (!stockUpdatedRef.current) {
           const result = await updateProductStock(data.products);
           if (!result.success) {
@@ -49,38 +99,12 @@ const SuccessPage = () => {
           stockUpdatedRef.current = true;
         }
 
-        // if (!awbGeneratedRef.current) {
-        //   try {
-        //     const awbNumber = await generateAwb({
-        //       cart: {
-        //         id: data.orderNumber,
-        //         shipping_address: {
-        //           first_name: data.address.firstName.split(" ").slice(0, -1).join(" "),
-        //           last_name: data.address.lastName.split(" ").slice(-1).join(" "),
-        //           phone: data.address.phone,
-        //           email: data.address.email,
-        //           province: data.address.province,
-        //           city: data.address.city,
-        //           address_1: data.address.street,
-        //           postal_code: data.address.postalCode,
-        //         },
-        //       },
-        //     });
-
-        //     console.log("AWB generat cu succes:", awbNumber);
-        //   } catch (error) {
-        //     console.error("Eroare la generarea AWB:", error);
-        //   }
-        //   awbGeneratedRef.current = true;
-        // }
-
-        // Trimite email doar dacă nu a fost trimis anterior
-        if (!emailSentRef.current) {
-          sendEmail(data);
+        if (!emailSentRef.current && data) {
+          await sendEmail(data);
           emailSentRef.current = true;
         }
       } catch (err) {
-        setError(err.message);
+        setError((err as Error).message);
       } finally {
         setLoading(false);
         clearBasket();
@@ -93,9 +117,9 @@ const SuccessPage = () => {
       setError("Order number not found");
       setLoading(false);
     }
-  }, [orderNumber]);
+  }, [orderNumber, clearBasket]);
 
-  const handleDownloadInvoice = async (orderNumber) => {
+  const handleDownloadInvoice = async (orderNumber: string) => {
     try {
       const response = await fetch(`/invoice/${orderNumber}/download`);
       const blob = await response.blob();
@@ -108,10 +132,9 @@ const SuccessPage = () => {
     } catch (error) {
       console.error('Error:', error);
     }
-   };
+  };
 
-
-   const sendEmail = async (details) => {
+  const sendEmail = async (details: OrderDetails) => {
     try {
       const emailData = {
         order_id: details.orderNumber,
@@ -138,7 +161,7 @@ const SuccessPage = () => {
         client_locality: details.address.city,
         client_address: details.address.street,
         invoice_url: details.invoice ? 
-          `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${details.invoice}/download` : 
+          `${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${details.invoice.number}/download` : 
           null,
         client_type: details.billingAddress?.isLegalEntity ? "Persoană Juridică" : "Persoană Fizică",
         company_name: details.billingAddress?.companyName || "",
@@ -151,7 +174,7 @@ const SuccessPage = () => {
         company_bank_name: details.billingAddress?.bankName || "",
         company_IBAN: details.billingAddress?.iban || ""
       };
-   
+
       const notificationData = {
         client_last_name: details.customerName.split(" ").slice(-1).join(" "),
         client_first_name: details.customerName.split(" ").slice(0, -1).join(" "),
@@ -166,17 +189,18 @@ const SuccessPage = () => {
         order_products_total: emailData.order_products_total,
         order_shipping_cost: emailData.order_shipping_cost,
       };
-   
+
       await Promise.all([
         emailjs.send("service_5kulkwh", "template_soo87le", emailData, "uSA0IVA9aGhfzQfPC"),
         emailjs.send("service_5kulkwh", "template_kbk4s1r", notificationData, "uSA0IVA9aGhfzQfPC")
       ]);
-   
+
       console.log("Emailuri trimise cu succes!");
     } catch (error) {
       console.error("Eroare la trimiterea emailurilor:", error);
     }
-   };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -193,19 +217,10 @@ const SuccessPage = () => {
     );
   }
 
-  const {
-    customerName,
-    invoice,
-    email,
-    address,
-    products,
-    totalPrice,
-    shippingCost,
-    currency,
-    paymentType,
-    awb,
-    billingAddress,
-  } = orderDetails;
+  if (!orderDetails) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="bg-white p-12 rounded-xl shadow-lg max-w-3xl w-full mx-4">
@@ -233,44 +248,46 @@ const SuccessPage = () => {
           <p className="text-lg text-gray-700 mb-4">
             Comanda ta a fost înregistrată cu succes.
           </p>
-          {invoice.number && (
- <button 
-   onClick={() => handleDownloadInvoice(invoice.number)}
-   className="text-blue-600 hover:text-blue-800 flex items-center"
- >
-   <FileText className="w-4 h-4 mr-2" />
-   Descarcă Factura
- </button>
-)}
+          {orderDetails.invoice?.number && (
+            <button 
+              onClick={() => handleDownloadInvoice(orderDetails.invoice!.number)}
+              className="text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Descarcă Factura
+            </button>
+          )}
 
           <div className="space-y-2">
             <p className="text-gray-600">
-              <strong>Număr comandă:</strong> {orderNumber}
+              <strong>Număr comandă:</strong> {orderDetails.orderNumber}
             </p>
             <p className="text-gray-600">
-              <strong>Client:</strong> {address.lastName} {address.firstName}
+              <strong>Client:</strong> {orderDetails.address.lastName} {orderDetails.address.firstName}
             </p>
             <p className="text-gray-600">
-              <strong>Email:</strong> {address.email}
+              <strong>Email:</strong> {orderDetails.address.email}
             </p>
             <p className="text-gray-600">
               <strong>Adresă de livrare:</strong>{" "}
-              {`${address.street}, ${address.city}, ${address.province}, ${address.postalCode}`}
+              {`${orderDetails.address.street}, ${orderDetails.address.city}, ${orderDetails.address.province}, ${orderDetails.address.postalCode}`}
             </p>
             <p className="text-gray-600">
               <strong>Metodă de plată:</strong>{" "}
-              {paymentType === "card" ? "Card" : "Ramburs"}
+              {orderDetails.paymentType === "card" ? "Card" : "Ramburs"}
             </p>
-            <p className="text-gray-600">
-              <strong>AWB: {awb}</strong> {}
-            </p>
-            {billingAddress.cui && (
+            {orderDetails.awb && (
+              <p className="text-gray-600">
+                <strong>AWB:</strong> {orderDetails.awb}
+              </p>
+            )}
+            {orderDetails.billingAddress?.cui && (
               <>
                 <p className="text-gray-600">
-                  <strong>CUI: {billingAddress.cui}</strong> {}
+                  <strong>CUI:</strong> {orderDetails.billingAddress.cui}
                 </p>
                 <p className="text-gray-600">
-                  <strong>Companie:</strong> {billingAddress.companyName}
+                  <strong>Companie:</strong> {orderDetails.billingAddress.companyName}
                 </p>
               </>
             )}
@@ -280,7 +297,7 @@ const SuccessPage = () => {
         <div className="mb-6">
           <h2 className="text-2xl font-semibold mb-4">Produse comandate</h2>
           <ul className="space-y-4">
-            {products.map((product) => (
+            {orderDetails.products.map((product) => (
               <li
                 key={product.product._id}
                 className="flex justify-between items-center"
@@ -311,7 +328,7 @@ const SuccessPage = () => {
                 </div>
                 <p className="text-gray-700">
                   {(product.product.price * product.quantity).toFixed(2)}{" "}
-                  {currency}
+                  {orderDetails.currency}
                 </p>
               </li>
             ))}
@@ -322,19 +339,19 @@ const SuccessPage = () => {
           <div className="flex justify-between mb-2">
             <span className="text-gray-600">Cost livrare:</span>
             <span className="text-gray-800 font-medium">
-              {shippingCost.toFixed(2)} {currency}
+              {orderDetails.shippingCost.toFixed(2)} {orderDetails.currency}
             </span>
           </div>
           <div className="flex justify-between mb-2">
             <span className="text-gray-600">Total produse:</span>
             <span className="text-gray-800 font-medium">
-              {(totalPrice - shippingCost).toFixed(2)} {currency}
+              {(orderDetails.totalPrice - orderDetails.shippingCost).toFixed(2)} {orderDetails.currency}
             </span>
           </div>
           <div className="flex justify-between text-lg font-semibold">
             <span>Total de plată:</span>
             <span>
-              {totalPrice.toFixed(2)} {currency}
+              {orderDetails.totalPrice.toFixed(2)} {orderDetails.currency}
             </span>
           </div>
         </div>

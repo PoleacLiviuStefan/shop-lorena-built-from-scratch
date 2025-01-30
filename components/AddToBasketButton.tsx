@@ -21,7 +21,7 @@ interface AddToBasketButtonProps {
 
 const AddToBasketButton = ({ product, disabled, withButton = false }: AddToBasketButtonProps) => {
     const { addItem, updateQuantity, getItemCount } = useBasketStore();
-    const itemCount = getItemCount(product._id, product.variant);
+    const itemCount = getItemCount(product._id);
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {

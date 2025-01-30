@@ -1,6 +1,9 @@
 import { backendClient } from "@/sanity/lib/backendClient";
 import { NextRequest, NextResponse } from "next/server";
 import { generateInvoice } from "@/lib/generateInvoice";
+import { Product,BillingAddress,ProductVariant } from "../../types/interfaces";
+
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +22,20 @@ export async function POST(req: NextRequest) {
       awb,
       discount,
       promoCode,
+    }: {
+      orderNumber: string;
+      customerName: string;
+      customerEmail: string;
+      clerkUserId: string;
+      products: Product[];
+      totalPrice: number;
+      currency: string;
+      address: string;
+      billingAddress?: BillingAddress;
+      shippingCost: number;
+      awb: string;
+      discount: number;
+      promoCode: string;
     } = body;
 
     if (!products?.length) throw new Error("Products missing");
@@ -43,11 +60,11 @@ export async function POST(req: NextRequest) {
       );
       invoiceNumber = invoice.number;
       console.log("Invoice:", invoice);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error generating invoice:", error);
     }
 
-    const sanityProducts = products.map((item: any) => ({
+    const sanityProducts = products.map((item: Product) => ({
       _key: crypto.randomUUID(),
       product: { _type: "reference", _ref: item.productId },
       quantity: item.quantity,
@@ -87,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     // Scade stocul pentru fiecare produs
     await Promise.all(
-      products.map(async (item: any) => {
+      products.map(async (item: Product) => {
         const product = await backendClient.getDocument(item.productId);
 
         if (!product) {
@@ -95,7 +112,7 @@ export async function POST(req: NextRequest) {
         }
 
         const variantIndex = product.variants.findIndex(
-          (v: any) =>
+          (v: ProductVariant) =>
             v.curbura === item.variant?.curbura &&
             v.grosime === item.variant?.grosime &&
             v.marime === item.variant?.marime
@@ -123,10 +140,10 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, order });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message},
       { status: 500 }
     );
   }

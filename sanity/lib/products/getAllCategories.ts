@@ -1,24 +1,27 @@
 import { defineQuery } from "next-sanity";
 import { sanityFetch } from "../live";
+import type { Category } from '@/sanity.types';
 
-export const getAllCategories = async () => {
+export const getAllCategories = async (): Promise<Category[]> => {
     const ALL_CATEGORIES_QUERY = defineQuery(`
-        *[_type == "category"] | order(title asc) {
-            title, // Corectăm aici pentru a obține titlul
-            "slug": slug.current // Obține slug-ul corect
-        }
-    `);
+    *[_type == "category"] {
+      _id,
+      _type,
+      _createdAt,
+      _updatedAt,
+      _rev,
+      title,
+      "slug": slug.current
+    }`);
   
     try {
-      const categories = await sanityFetch({
+      const response = await sanityFetch({
         query: ALL_CATEGORIES_QUERY,
       });
   
-      console.log("Fetched categories:", categories); // Verificăm dacă `title` există acum
-      return categories?.data || []; // Ne asigurăm că este un array
+      return response?.data || []; 
     } catch (error) {
       console.error("Error fetching all categories: ", error);
       return [];
     }
-  };
-  
+};
