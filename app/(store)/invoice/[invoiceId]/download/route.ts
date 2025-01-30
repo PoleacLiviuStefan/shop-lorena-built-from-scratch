@@ -1,16 +1,11 @@
 import type { NextRequest } from 'next/server';
 
-type Context = {
-  params: {
-    invoiceId: string
-  }
-}
-
 export async function GET(
-  _request: NextRequest,
-  context: Context  // Simple context type
+  req: NextRequest,
+  context: { params: { invoiceId: string } | Promise<{ invoiceId: string }> }
 ) {
-  const { invoiceId } = context.params;
+  const params = await context.params;
+  const { invoiceId } = params;
 
   if (!invoiceId) {
     return new Response('Invoice ID is required.', { status: 400 });
