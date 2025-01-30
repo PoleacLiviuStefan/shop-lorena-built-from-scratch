@@ -1,5 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import fetch from 'node-fetch';
+import { NextRequest, NextResponse } from 'next/server';
 import { saveTokenToDatabase } from '@/sanity/lib/tokenOperations/tokenOperations';
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -62,25 +61,25 @@ async function fetchAndSaveToken() {
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { authorization } = req.headers;
-  if (authorization !== `Bearer ${CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  
+  if (!authHeader || authHeader !== `Bearer ${CRON_SECRET}`) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
   }
 
   try {
     const result = await fetchAndSaveToken();
-    return res.status(200).json(result);
+    return NextResponse.json(result);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     console.error('Cron job failed:', error);
-    return res.status(500).json({ error: errorMessage });
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
   }
 }
