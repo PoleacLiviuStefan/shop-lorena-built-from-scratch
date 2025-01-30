@@ -1,6 +1,6 @@
-import { client } from "../client"; // Asigurați-vă că importați clientul Sanity corect configurat.
+import { client } from "../client";
 
-export const decrementProductStock = async (productId, quantity) => {
+export const decrementProductStock = async (productId: string, quantity: number) => {
   if (!productId || !quantity || quantity <= 0) {
     throw new Error("ID-ul produsului și cantitatea trebuie să fie valide.");
   }

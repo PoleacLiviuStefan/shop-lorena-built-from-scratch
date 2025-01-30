@@ -1,24 +1,21 @@
-import { defineField, defineType } from "sanity";
-import { BellIcon } from '@sanity/icons';
-import type { ValidationContext, SanityDocument } from 'sanity';
-
-interface CourseDocument extends SanityDocument {
-    startDate?: string;
-}
-
-export const coursesType = defineType({
+"use strict";
+exports.__esModule = true;
+exports.coursesType = void 0;
+var sanity_1 = require("sanity");
+var icons_1 = require("@sanity/icons");
+exports.coursesType = sanity_1.defineType({
     name: "course",
     title: "Date Cursuri",
     type: "document",
-    icon: BellIcon,
+    icon: icons_1.BellIcon,
     fields: [
-        defineField({
+        sanity_1.defineField({
             name: "courseName",
             title: "Nume Curs",
             type: "string",
-            validation: (Rule) => Rule.required(),
+            validation: function (Rule) { return Rule.required(); }
         }),
-        defineField({
+        sanity_1.defineField({
             name: "courseIntervals",
             title: "Intervale de Date Curs",
             type: "array",
@@ -30,21 +27,22 @@ export const coursesType = defineType({
                             name: "startDate",
                             title: "Data de început",
                             type: "date",
-                            validation: (Rule) => Rule.required(),
+                            validation: function (Rule) { return Rule.required(); }
                         },
                         {
                             name: "endDate",
                             title: "Data de sfârșit",
                             type: "date",
-                            validation: (Rule) =>
-                                Rule.required().custom((endDate: string, context: ValidationContext) => {
-                                    const doc = context.document as CourseDocument;
-                                    const startDate = doc?.startDate;
+                            validation: function (Rule) {
+                                return Rule.required().custom(function (endDate, context) {
+                                    var doc = context.document;
+                                    var startDate = doc === null || doc === void 0 ? void 0 : doc.startDate;
                                     if (startDate && endDate < startDate) {
                                         return "Data de sfârșit trebuie să fie după data de început.";
                                     }
                                     return true;
-                                }),
+                                });
+                            }
                         },
                     ],
                     preview: {
@@ -52,15 +50,16 @@ export const coursesType = defineType({
                             startDate: 'startDate',
                             endDate: 'endDate'
                         },
-                        prepare({ startDate, endDate }: { startDate?: string; endDate?: string }) {
+                        prepare: function (_a) {
+                            var startDate = _a.startDate, endDate = _a.endDate;
                             return {
-                                title: `${startDate || "Fără dată"} - ${endDate || "Fără dată"}`,
+                                title: (startDate || "Fără dată") + " - " + (endDate || "Fără dată")
                             };
-                        },
-                    },
+                        }
+                    }
                 },
             ],
-            validation: (Rule) => Rule.required().min(1),
+            validation: function (Rule) { return Rule.required().min(1); }
         })
     ]
-})
+});

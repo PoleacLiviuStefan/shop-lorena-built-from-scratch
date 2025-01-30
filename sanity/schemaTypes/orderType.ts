@@ -47,7 +47,7 @@ export const orderType = defineType({
       options: {
         dateFormat: "YYYY-MM-DD",
         timeFormat: "HH:mm",
-        calendarTodayLabel: "Astăzi",
+
       },
       validation: (Rule) => Rule.required(),
     }),

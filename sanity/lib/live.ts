@@ -3,7 +3,6 @@
 // https://github.com/sanity-io/next-sanity#live-content-api for more information.
 import { defineLive } from "next-sanity";
 import  {client}  from './client'
-import { browser } from "process";
 
 const token = process.env.SANITY_API_TOKEN;
 if(!token) {
