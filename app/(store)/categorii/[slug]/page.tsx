@@ -30,15 +30,15 @@ function transformToResolvedCategory(rawCategory: Category): ResolvedCategory | 
   };
 }
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
+type Props = {
+  params: Promise<{ slug: string }>;
   searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default async function Page({ params }: PageProps) {
-  const { slug } = params;
+export default async function Page({ params }: Props) {
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+  
   const productsResult = await getProductsByCategory(slug);
   const rawCategories = await getAllCategories();
 
