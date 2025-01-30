@@ -27,7 +27,7 @@ const CategorySelectorComponent = ({ categories }: CategorySelectorProps) => {
   const router = useRouter();
 
   return (
-    <Popover open={open} onOpenChange={setOpen} className="z-50">
+    <Popover open={open} onOpenChange={setOpen} >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -44,7 +44,7 @@ const CategorySelectorComponent = ({ categories }: CategorySelectorProps) => {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full p-0 z-50">
         <Command>
           <CommandInput
             placeholder="Cauta categoria dorita..."
