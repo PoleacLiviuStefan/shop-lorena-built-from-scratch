@@ -1,69 +1,35 @@
-// app/(store)/orders/[orderNumber]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { backendClient } from '@/sanity/lib/backendClient';
+import { backendClient } from "@/sanity/lib/backendClient";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest, { params }: { params: { orderNumber: string } }) {
-  const { orderNumber } = await params;
-
-  if (!orderNumber) {
-    return NextResponse.json({ error: 'Missing order number' }, { status: 400 });
-  }
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ orderNumber: string }> } // params este un Promise
+) {
+  const { orderNumber } = await params; // Folosim `await` pentru a obține orderNumber
 
   try {
-    const query = `*[_type == "order" && orderNumber == $orderNumber][0] {
-      orderNumber,
-      awb,
-      customerName,
-      email,
-      address,
-      invoice,
-      billingAddress {
-        isLegalEntity,
-        companyName,
-        cui,
-        tradeRegisterNumber,
-        companyAddress,
-        companyCity,
-        companyCounty,
-        companyPostalCode,
-        bankName,
-        iban
-      },
-      products[] {
-        product->{
-          _id,
-          name,
-          price,
-          image
-        },
-        quantity,
-        variant { // Preia varianta selectată
-          curbura,
-          grosime,
-          marime,
-          price
-        }
-      },
-      totalPrice,
-      discount,
-      promoCode,
-      shippingCost,
-      currency,
-      paymentType,
-      orderDate
-    }`;
-    
-    
+    // Fetch the document ID
+    const orders = await backendClient.fetch(
+      `*[_type == "order" && orderNumber == $orderNumber][0]._id`, 
+      { orderNumber }
+    );
 
-    const order = await backendClient.fetch(query, { orderNumber });
-
-    if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!orders) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json(order);
+    // Patch using document ID 
+    await backendClient
+      .patch(orders)
+      .set({ status: "canceled" })
+      .commit();
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error fetching order:', error);
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
+    console.error("Error canceling order:", error);
+    return NextResponse.json(
+      { error: "Failed to cancel order" }, 
+      { status: 500 }
+    );
   }
 }
