@@ -1,12 +1,16 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-type Params = { invoiceId: string };
+type Context = {
+  params: {
+    invoiceId: string
+  }
+}
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Params }
+  _request: NextRequest,
+  context: Context  // Simple context type
 ) {
-  const { invoiceId } = params;
+  const { invoiceId } = context.params;
 
   if (!invoiceId) {
     return new Response('Invoice ID is required.', { status: 400 });
@@ -23,14 +27,13 @@ export async function GET(
       {
         method: 'GET',
         headers: {
-          Authorization: `Basic ${encodedAuth}`, // Basic Auth
-          Accept: 'application/octet-stream, application/xml', // Required headers
+          Authorization: `Basic ${encodedAuth}`,
+          Accept: 'application/octet-stream, application/xml',
         },
       }
     );
 
     if (!response.ok) {
-      // Handle errors from SmartBill
       const errorText = await response.text();
       return new Response(
         `Eroare SmartBill: ${errorText || 'Nu s-a putut obține factura.'}`,
@@ -38,13 +41,12 @@ export async function GET(
       );
     }
 
-    // Return the PDF buffer as a response
     const pdfBuffer = await response.arrayBuffer();
 
     return new Response(pdfBuffer, {
       headers: {
-        'Content-Type': 'application/pdf', // Serve as PDF
-        'Content-Disposition': `inline; filename="invoice_${invoiceId}.pdf"`, // Inline view
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="invoice_${invoiceId}.pdf"`,
       },
     });
   } catch (error) {
