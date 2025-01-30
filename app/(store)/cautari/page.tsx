@@ -1,16 +1,16 @@
-
 import ProductGrid from "@/components/ProductGrid";
 import { searchProductsByName } from "@/sanity/lib/products/searchProductsByName";
 import React from "react";
 
-const SearchPage = async ({
-  searchParams,
-}: {
-  searchParams: {
+type Props = {
+  searchParams: Promise<{
     query: string;
-  };
-}) => {
-  const { query } = await searchParams;
+  }>;
+}
+
+const SearchPage = async ({ searchParams }: Props) => {
+  const resolvedParams = await searchParams;
+  const { query } = resolvedParams;
   const products = await searchProductsByName(query);
 
   if (!products.length) {
@@ -28,14 +28,14 @@ const SearchPage = async ({
     );
   }
 
-  return(
-  <div className="flex flex-col items-center justify-top min-h-screen bg-gray-100 p-4">
-    <div>
-      <h1 className="text-3xl font-bold mb-6 text-center">Ai cautat {query}</h1>
-      <ProductGrid products={products} />
+  return (
+    <div className="flex flex-col items-center justify-top min-h-screen bg-gray-100 p-4">
+      <div>
+        <h1 className="text-3xl font-bold mb-6 text-center">Ai cautat {query}</h1>
+        <ProductGrid products={products} />
+      </div>
     </div>
-  </div>
-  )
+  );
 };
 
 export default SearchPage;
