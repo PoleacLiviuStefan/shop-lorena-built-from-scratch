@@ -32,10 +32,10 @@ function transformToResolvedCategory(rawCategory: Category): ResolvedCategory | 
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const resolvedParams = await params;
   const { slug } = resolvedParams;
   
