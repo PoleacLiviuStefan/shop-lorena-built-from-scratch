@@ -108,7 +108,7 @@ export default function SuccessPage() {
         return;
       }
       try {
-        const res = await fetch(`/api/stripe-session?session_id=${sessionId}`);
+        const res = await fetch(`/stripe-session?session_id=${sessionId}`);
         const data = await res.json();
 
         console.log('Custom fields:', data.custom_fields); // Log pentru debugging

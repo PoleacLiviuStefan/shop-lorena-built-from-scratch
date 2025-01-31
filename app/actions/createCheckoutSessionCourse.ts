@@ -1,3 +1,4 @@
+'use server'
 import Stripe from 'stripe';
 
 export async function createCheckoutSessionCourse() {
