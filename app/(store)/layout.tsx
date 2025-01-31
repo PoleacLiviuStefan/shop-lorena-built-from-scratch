@@ -51,7 +51,7 @@ export default async function RootLayout({
           )}
           <main>
             <Header categories={categoryLinks} />
-            <div className="mt-[60px] lg:mt-[98px]">
+            <div className="mt-[60px] lg:mt-[98px] overflow-x-hidden">
               {children}
             </div>
           </main>

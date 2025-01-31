@@ -1,45 +1,56 @@
-'use server'
-import stripe from "@/lib/stripe";
-import Stripe from "stripe";
+import Stripe from 'stripe';
 
-interface CheckoutSessionParams {
-  priceId: string;
-  successUrl: string;
-  cancelUrl: string;
-  metadata: {
-    userId: string | null;
-    isCourse: boolean;
-  }
-}
+export async function createCheckoutSessionCourse() {
+  const stripe = new Stripe(process.env.NEXT_STRIPE_SECRET_KEY as string, {
+    apiVersion: '2024-12-18.acacia',
+  });
 
-export async function createCheckoutSessionCourse({
-  priceId,
-  successUrl,
-  cancelUrl,
-  metadata
-}: CheckoutSessionParams): Promise<string | null> {
   try {
-    // Convert all metadata values to strings for Stripe
-    const stripeMetadata: Stripe.MetadataParam = {
-      userId: metadata.userId?.toString() || 'anonymous',
-      isCourse: metadata.isCourse.toString()
-    };
+    // Generează un cod unic
+    const uniqueCode = `CODE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [{
-        price: priceId,
-        quantity: 1
-      }],
-      mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}${successUrl}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}${cancelUrl}`,
-      metadata: stripeMetadata
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: process.env.NEXT_STRIPE_COURSE_PRICE_ID,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      custom_fields: [
+        {
+          key: 'judet',
+          label: { type: 'custom', custom: 'Județ' },
+          type: 'text',
+          optional: false,
+        },
+        {
+          key: 'localitate',
+          label: { type: 'custom', custom: 'Localitate/Sector' },
+          type: 'text',
+          optional: false,
+        },
+
+        {
+          key: 'detalii_adresa',
+          label: { type: 'custom', custom: 'Bloc, Scara, Etaj, Ap., Nr.' },
+          type: 'text',
+          optional: false,
+        },
+      ],
+      metadata: {
+        unique_code: uniqueCode, // Salvează codul unic în metadata
+        client_name: 'John Doe', // Poți salva și alte detalii
+      },
+      
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cursuri/curs-online-feline-effect/succes?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cursuri/curs-online-feline-effect`,
     });
 
-    return session.url;
+    return session.url; // Returnează URL-ul sesiunii pentru redirecționare
   } catch (error) {
-    console.error("Error creating session:", error);
-    throw error;
+    console.error('Eroare la crearea sesiunii de checkout:', error);
+    throw new Error('Nu am putut crea sesiunea de checkout. Vă rugăm să încercați din nou.');
   }
 }

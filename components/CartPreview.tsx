@@ -49,7 +49,7 @@ const CartPreview = () => {
   return (
     <div
       ref={dropdownRef}
-      className="relative h-full z-50"
+      className="relative h-full "
       onMouseEnter={handleOpen}
       onMouseLeave={handleClose}
     >
