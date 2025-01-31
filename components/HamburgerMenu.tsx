@@ -8,7 +8,23 @@ import logo from '../public/Imagini/logo.png'
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import SearchBar from "./SearchBar"
 
-type MenuLink = string | { name: string; href: string }[];
+// Definim interfața pentru items din meniu
+interface MenuItem {
+  name: string;
+  href: string;
+}
+
+// Modificăm tipul MenuLink pentru a fi mai specific
+type MenuLink = string | MenuItem[];
+
+interface Category {
+  name: string;
+  href: string;
+}
+
+interface HamburgerProps {
+  categories: Category[];
+}
 
 const menuItems: Record<string, MenuLink> = {
   ACASĂ: '/',
@@ -24,21 +40,16 @@ const menuItems: Record<string, MenuLink> = {
   SUPORT: '/suport',
 };
 
-interface Category {
-  // No 'slug' if you don't have it in your data
-  name: string;
-  href: string;
-}
-
-interface HamburgerProps {
-  categories: Category[];
-}
-
 export default function HamburgerMenu({ categories }: HamburgerProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [cursuriDropdownOpen, setCursuriDropdownOpen] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
+
+  // Funcție helper pentru a verifica dacă linkData este un array de MenuItem
+  const isMenuItemArray = (linkData: MenuLink): linkData is MenuItem[] => {
+    return Array.isArray(linkData);
+  }
 
   return (
     <>
@@ -114,9 +125,7 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
         <ul className="p-4 mt-[20px]">
           {Object.entries(menuItems).map(([name, linkData]) => (
             <li key={name} className="relative py-2 text-black">
-              {/* If linkData is a string, normal Link.
-                  If it's an array, show special dropdown logic. */}
-              {typeof linkData === 'string' ? (
+              {typeof linkData === 'string' && name !== "MAGAZIN" ? (
                 <Link
                   href={linkData}
                   className="text-[16px] leading-10 hover:text-ui-fg-base"
@@ -125,9 +134,7 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
                   {name}
                 </Link>
               ) : (
-                // linkData is an array => Cursuri or similar
                 <div className="flex flex-col">
-                  {/* The top-level label for the dropdown */}
                   <button
                     className="flex justify-between items-center text-[16px] leading-10 hover:text-ui-fg-base"
                     onClick={() => {
@@ -141,17 +148,14 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
                     {name}
                     {name === 'CURSURI PROFESIONALE' ? (
                       cursuriDropdownOpen ? <FiChevronUp /> : <FiChevronDown />
-                    ) : dropdownOpen ? (
-                      <FiChevronUp />
-                    ) : (
-                      <FiChevronDown />
-                    )}
+                    ) : name === 'MAGAZIN' ? (
+                      dropdownOpen ? <FiChevronUp /> : <FiChevronDown />
+                    ) : null}
                   </button>
 
-                  {/* Now map the sub-items */}
-                  {name === 'CURSURI PROFESIONALE' && cursuriDropdownOpen && (
+                  {name === 'CURSURI PROFESIONALE' && cursuriDropdownOpen && isMenuItemArray(linkData) && (
                     <ul className="pl-4">
-                      {linkData.map((course) => (
+                      {linkData.map((course: MenuItem) => (
                         <li key={course.name} className="py-2">
                           <Link
                             href={course.href}
@@ -165,7 +169,6 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
                     </ul>
                   )}
 
-                  {/* Sample: For 'MAGAZIN' we show categories + maybe 'ALL PRODUCTS' */}
                   {name === 'MAGAZIN' && dropdownOpen && (
                     <ul className="pl-4">
                       <li className="py-2">
@@ -177,9 +180,8 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
                           TOATE PRODUSELE
                         </Link>
                       </li>
-                      {categories.map((category) => (
+                      {categories?.map((category) => (
                         <li key={category.href} className="py-2">
-                          {/* Replaced `key={category.slug}` with `category.href` */}
                           <Link
                             href={category.href}
                             className="text-[14px] hover:text-ui-fg-base uppercase"
@@ -193,7 +195,6 @@ export default function HamburgerMenu({ categories }: HamburgerProps) {
                   )}
                 </div>
               )}
-
               <span className="absolute left-0 bottom-0 w-full h-[1px] bg-gray-200" />
             </li>
           ))}

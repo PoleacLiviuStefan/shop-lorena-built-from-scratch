@@ -116,6 +116,9 @@ const Header = ({ categories }: { categories: { name: string; href: string }[] }
   {showCategories && (
     <ul className="absolute w-[250px] top-full left-0 bg-white shadow-lg px-3 py-2 z-50 ">
       {/* Validăm dacă categories este un array */}
+      <li  className="uppercase py-2">
+            <Link href="/magazin" className="hover:opacity-50 cursor-pointer w-full block">TOATE PRODUSELE</Link>
+          </li>
       {categories.map((category) => (
           <li key={category.href} className="uppercase py-2">
             <Link href={category.href} className="hover:opacity-50 cursor-pointer w-full block">{category.name}</Link>

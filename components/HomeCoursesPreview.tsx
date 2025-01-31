@@ -17,7 +17,7 @@ const HomeCoursesPreview = () => {
 className="w-[300px] h-auto"
         />
         <div className="flex items-center justify-center absolute bottom-0  bg-black text-white  h-[50px] z-10 w-full ">
-          <h2 className="text-[16px] lg:text-[24px] font-extrabold text-center ">Curs De Baza</h2>
+          <h2 className="text-[16px] lg:text-[22px] font-extrabold text-center ">Curs De Baza</h2>
           </div>
         </Link>
         <Link href="/cursuri/curs-de-baza-premium" className="relative"  >
@@ -29,7 +29,7 @@ className="w-[300px] h-auto"
         className="relative w-[300px] h-auto"
         />
            <div className="flex items-center justify-center absolute bottom-0  bg-black text-white  h-[50px] z-10 w-full ">
-          <h2 className="text-[16px] lg:text-[24px] font-extrabold text-center">Curs De Baza Premium</h2>
+          <h2 className="text-[16px] lg:text-[22px] font-extrabold text-center">Curs De Baza Premium</h2>
           </div>
         </Link>
         <Link href="/cursuri/curs-de-efecte-speciale" className="relative" >
@@ -41,7 +41,7 @@ className="w-[300px] h-auto"
 className="w-[300px] h-auto"
         />
             <div className="flex items-center justify-center absolute bottom-0  bg-black text-white  h-[50px] z-10 w-full ">
-            <h2 className="text-[16px] lg:text-[24px] font-extrabold text-center">Curs De Efecte Speciale</h2>
+            <h2 className="text-[16px] lg:text-[22px] font-extrabold text-center">Curs De Efecte Speciale</h2>
             </div>
         </Link>
         <Link href="/cursuri/curs-VIP" className="relative"  >
@@ -54,7 +54,7 @@ className="w-[300px] h-auto"
           className="w-[300px] h-auto"
         />
            <div className="flex items-center justify-center absolute bottom-0  bg-black text-white  h-[50px] z-10 w-full ">
-        <h2 className="text-[16px] lg:text-[24px] font-extrabold text-center">Curs VIP</h2>
+        <h2 className="text-[16px] lg:text-[22px] font-extrabold text-center">Curs VIP</h2>
         </div>
         </Link>
       

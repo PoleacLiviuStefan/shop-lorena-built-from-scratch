@@ -52,7 +52,7 @@ const ProductThumb = ({ product }: { product: Product }) => {
             </div>
 
             <div className="flex flex-col mt-4">
-                <h2 className="text-gray-600 font-bold text-sm lg:text-base truncate">
+                <h2 className="text-gray-600 font-bold text-sm lg:text-base truncate uppercase">
                     {product.name}
                 </h2>
 

@@ -1,9 +1,7 @@
 import { backendClient } from "@/sanity/lib/backendClient";
 import { NextRequest, NextResponse } from "next/server";
 import { generateInvoice } from "@/lib/generateInvoice";
-import { Product,BillingAddress,ProductVariant } from "../../types/interfaces";
-
-
+import { Product, BillingAddress, ProductVariant } from "../../types/interfaces";
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +54,7 @@ export async function POST(req: NextRequest) {
         orderNumber,
         items,
         billingAddress,
-        billingAddress?.isLegalEntity || false // Decide dacă este persoană juridică
+        billingAddress?.isLegalEntity || false
       );
       invoiceNumber = invoice.number;
       console.log("Invoice:", invoice);
@@ -64,18 +62,39 @@ export async function POST(req: NextRequest) {
       console.error("Error generating invoice:", error);
     }
 
-    const sanityProducts = products.map((item: Product) => ({
-      _key: crypto.randomUUID(),
-      product: { _type: "reference", _ref: item.productId },
-      quantity: item.quantity,
-      variant: {
-        curbura: item.variant?.curbura,
-        grosime: item.variant?.grosime,
-        marime: item.variant?.marime,
-        price: item.variant?.price,
-        stock: item.variant?.stock,
-      },
-    }));
+    const sanityProducts = products.map((item: Product) => {
+      const baseProduct = {
+        _key: crypto.randomUUID(),
+        product: { _type: "reference", _ref: item.productId },
+        quantity: item.quantity,
+      };
+
+      // Verificăm dacă produsul are variant cu proprietăți specifice
+      if (item.variant?.curbura || item.variant?.grosime || item.variant?.marime) {
+        return {
+          ...baseProduct,
+          variant: {
+            curbura: item.variant.curbura,
+            grosime: item.variant.grosime,
+            marime: item.variant.marime,
+            price: item.variant.price,
+            stock: item.variant.stock,
+          },
+        };
+      } else if (item.variant?.price) {
+        // Pentru variante simple care au doar preț și stoc
+        return {
+          ...baseProduct,
+          variant: {
+            price: item.variant.price,
+            stock: item.variant.stock,
+          },
+        };
+      }
+
+      // Dacă nu există variant, returnăm doar produsul de bază
+      return baseProduct;
+    });
 
     const order = await backendClient.create({
       _type: "order",
@@ -96,9 +115,9 @@ export async function POST(req: NextRequest) {
       orderDate: new Date().toISOString(),
       awb,
       invoice: {
-        number: invoiceNumber, // Numărul facturii
-        series: process.env.SMARTBILL_SERIES_NAME, // Seria facturii
-        url: "",       // Link-ul către PDF-ul facturii
+        number: invoiceNumber,
+        series: process.env.SMARTBILL_SERIES_NAME,
+        url: "",
       },
     });
 
@@ -106,36 +125,74 @@ export async function POST(req: NextRequest) {
     await Promise.all(
       products.map(async (item: Product) => {
         const product = await backendClient.getDocument(item.productId);
+        console.log("product este: ", product);
 
         if (!product) {
           throw new Error(`Product ${item.productId} not found`);
         }
 
-        const variantIndex = product.variants.findIndex(
-          (v: ProductVariant) =>
-            v.curbura === item.variant?.curbura &&
-            v.grosime === item.variant?.grosime &&
-            v.marime === item.variant?.marime
-        );
+        // Verificăm dacă produsul are variante simple (doar price și stock)
+        const hasSimpleVariants = product.variants?.length > 0 && 
+          !product.variants[0].curbura && 
+          !product.variants[0].grosime && 
+          !product.variants[0].marime;
 
-        if (variantIndex === -1) {
-          throw new Error(
-            `Variant not found for product ${item.productId}`
+        if (hasSimpleVariants) {
+          // Cazul 1: Produs cu variantă simplă (doar price și stock)
+          const variant = product.variants[0]; // Luăm prima variantă pentru că e singura
+
+          if (variant.stock < item.quantity) {
+            throw new Error(
+              `Insufficient stock for product ${item.productId}`
+            );
+          }
+
+          variant.stock -= item.quantity;
+
+          await backendClient
+            .patch(item.productId)
+            .set({ variants: [variant] })
+            .commit();
+        } else if (product.variants && product.variants.length > 0) {
+          // Cazul 2: Produs cu variante complete (curbura, grosime, marime)
+          const variantIndex = product.variants.findIndex(
+            (v: ProductVariant) =>
+              v.curbura === item.variant?.curbura &&
+              v.grosime === item.variant?.grosime &&
+              v.marime === item.variant?.marime
           );
+
+          if (variantIndex === -1) {
+            throw new Error(
+              `Variant not found for product ${item.productId}`
+            );
+          }
+
+          if (product.variants[variantIndex].stock < item.quantity) {
+            throw new Error(
+              `Insufficient stock for variant of product ${item.productId}`
+            );
+          }
+
+          product.variants[variantIndex].stock -= item.quantity;
+
+          await backendClient
+            .patch(item.productId)
+            .set({ variants: product.variants })
+            .commit();
+        } else {
+          // Cazul 3: Produs fără variante
+          if (product.stock < item.quantity) {
+            throw new Error(
+              `Insufficient stock for product ${item.productId}`
+            );
+          }
+
+          await backendClient
+            .patch(item.productId)
+            .set({ stock: product.stock - item.quantity })
+            .commit();
         }
-
-        if (product.variants[variantIndex].stock < item.quantity) {
-          throw new Error(
-            `Insufficient stock for variant of product ${item.productId}`
-          );
-        }
-
-        product.variants[variantIndex].stock -= item.quantity;
-
-        await backendClient
-          .patch(item.productId)
-          .set({ variants: product.variants })
-          .commit();
       })
     );
 

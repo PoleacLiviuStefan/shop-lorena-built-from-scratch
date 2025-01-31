@@ -31,7 +31,7 @@ const SearchBar = ({showSearchBar=false} :{showSearchBar: boolean}) => {
       </button>
     </form>
     <div className={`absolute top-0 left-0 w-screen h-screen flex items-center justify-center bg-white  lg:hidden ${showSearchBar ? "inline" : "hidden"}`}>
-    <form onSubmit={handleSubmit} className={`relative `}>
+    <form onSubmit={handleSubmit} className={`relative w-full px-4 `}>
       <input
         type="text"
         value={query}
@@ -41,7 +41,7 @@ const SearchBar = ({showSearchBar=false} :{showSearchBar: boolean}) => {
       />
       <button
         type="submit"
-        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
       >
         <FaMagnifyingGlass />
       </button>

@@ -83,12 +83,13 @@ const SuccessPage = () => {
             "Content-Type": "application/json",
           },
         });
-
+      
         if (!response.ok) {
           throw new Error("Failed to fetch order details");
         }
 
         const data = await response.json();
+        console.log("data este: ",data)
         setOrderDetails(data);
         
         if (!stockUpdatedRef.current) {
@@ -119,21 +120,47 @@ const SuccessPage = () => {
     }
   }, [orderNumber, clearBasket]);
 
-  const handleDownloadInvoice = async (orderNumber: string) => {
+  const handleDownloadInvoice = async (invoiceNumber: string) => {
     try {
-      const response = await fetch(`/invoice/${orderNumber}/download`);
+      const response = await fetch(`/invoice/${invoiceNumber}/download`, {
+        headers: {
+          'Accept': 'application/pdf',  // Specificăm explicit că acceptăm PDF
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('Download failed:', response.status, response.statusText);
+        throw new Error(`Failed to download invoice: ${response.statusText}`);
+      }
+  
       const blob = await response.blob();
+      
+      // Verificăm dacă blob-ul este gol
+      if (blob.size === 0) {
+        throw new Error('Received empty response');
+      }
+  
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none'; // Ascundem elementul
       a.href = url;
-      a.download = `factura_${orderNumber}.pdf`;
+      a.download = `factura_${invoiceNumber}.pdf`;
+      
+      // Adăugăm la document, declanșăm click și apoi curățăm
+      document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      
+      // Curățare după descărcare
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+  
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error downloading invoice:', error);
+      alert('Nu s-a putut descărca factura. Vă rugăm încercați din nou mai târziu.');
     }
   };
-
   const sendEmail = async (details: OrderDetails) => {
     try {
       const emailData = {
