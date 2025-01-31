@@ -19,7 +19,7 @@ const Header = ({ categories }: { categories: { name: string; href: string }[] }
   const [showCategories, setShowCategories] = useState(false);
   console.log("categories", categories);
   const coursesList = [
-    { name: "ONLINE", href: "/cursuri/online" },
+    { name: "CURS ONLINE FELNE EFFECT", href: "/cursuri/curs-online-feline-effect" },
     { name: "CURS DE BAZA 1D-3D & FOXY", href: "/cursuri/curs-de-baza" },
     { name: "CURS DE BAZA PREMIUM (BAZA&EFECTE)", href: "/cursuri/curs-de-baza-premium" },
     { name: "CURS DE EFECTE SPECIALE", href: "/cursuri/curs-de-efecte-speciale" },

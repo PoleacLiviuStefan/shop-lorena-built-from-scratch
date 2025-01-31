@@ -30,7 +30,7 @@ const menuItems: Record<string, MenuLink> = {
   ACASĂ: '/',
   MAGAZIN: '/magazin',
   'CURSURI PROFESIONALE': [
-    { name: "ONLINE", href: "/cursuri/online" },
+    { name: "CURS ONLINE FELINE EFFECT", href: "/cursuri/curs-online-feline-effect" },
     { name: "CURS DE BAZA 1D-3D & FOXY", href: "/cursuri/curs-de-baza" },
     { name: "CURS DE BAZA PREMIUM (BAZA&EFECTE)", href: "/cursuri/curs-de-baza-premium" },
     { name: "CURS DE EFECTE SPECIALE", href: "/cursuri/curs-de-efecte-speciale" },

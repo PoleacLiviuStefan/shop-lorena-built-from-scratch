@@ -68,6 +68,18 @@ export type Geopoint = {
   alt?: number;
 };
 
+export type AccessCode = {
+  _id: string;
+  _type: "accessCode";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  code?: string;
+  userId?: string;
+  isUsed?: boolean;
+  createdAt?: string;
+};
+
 export type Course = {
   _id: string;
   _type: "course";
@@ -75,7 +87,11 @@ export type Course = {
   _updatedAt: string;
   _rev: string;
   courseName?: string;
-  courseDates?: Array<string>;
+  courseIntervals?: Array<{
+    startDate?: string;
+    endDate?: string;
+    _key: string;
+  }>;
 };
 
 export type Sales = {
@@ -330,8 +346,19 @@ export type SanityImageMetadata = {
   isOpaque?: boolean;
 };
 
-export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityFileAsset | Geopoint | Course | Sales | Order | Product | Category | Slug | BlockContent | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata;
+export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityFileAsset | Geopoint | AccessCode | Course | Sales | Order | Product | Category | Slug | BlockContent | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata;
 export declare const internalGroqTypeReferenceTo: unique symbol;
+// Source: ./sanity/lib/courses/getCoursesDates.ts
+// Variable: ALL_COURSES_QUERY
+// Query: *[_type == "course"] {      "name": courseName,      courseIntervals[] {        startDate,        endDate      }    }
+export type ALL_COURSES_QUERYResult = Array<{
+  name: string | null;
+  courseIntervals: Array<{
+    startDate: string | null;
+    endDate: string | null;
+  }> | null;
+}>;
+
 // Source: ./sanity/lib/getMyOrders/getMyOders.tsx
 // Variable: My_ORDERS_QUERY
 // Query: *[_type == "order" && clerkUserId == $userId] | order(_createdAt desc){    ...,    products[]{      ...,      product->    }  }
@@ -462,7 +489,7 @@ export type My_ORDERS_QUERYResult = Array<{
 
 // Source: ./sanity/lib/products/getAllCategories.ts
 // Variable: ALL_CATEGORIES_QUERY
-// Query: *[_type == "category"] {  _id,  _type,  _createdAt,  _updatedAt,  _rev,  title,  "slug": slug.current}
+// Query: *[_type == "category"] {      _id,      _type,      _createdAt,      _updatedAt,      _rev,      title,      "slug": slug.current    }
 export type ALL_CATEGORIES_QUERYResult = Array<{
   _id: string;
   _type: "category";
@@ -546,16 +573,17 @@ export type ALL_PRODUCTS_QUERYResult = Array<{
 
 // Source: ./sanity/lib/products/getProductBySlug.ts
 // Variable: PRODUCT_BY_ID_QUERY
-// Query: *[    _type == "product" && slug.current == $slug    ] | order(name asc)[0]
+// Query: *[    _type == "product" && slug.current == $slug    ] | order(name asc)[0] {      _id,      _type,      _createdAt,      _updatedAt,      _rev,      name,      price,      stock,      images,      image,      variants,      description,      slug    }
 export type PRODUCT_BY_ID_QUERYResult = {
   _id: string;
   _type: "product";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  name?: string;
-  slug?: Slug;
-  images?: Array<{
+  name: string | null;
+  price: null;
+  stock: null;
+  images: Array<{
     asset?: {
       _ref: string;
       _type: "reference";
@@ -567,8 +595,17 @@ export type PRODUCT_BY_ID_QUERYResult = {
     alt?: string;
     _type: "image";
     _key: string;
-  }>;
-  description?: Array<{
+  }> | null;
+  image: null;
+  variants: Array<{
+    curbura?: "C" | "D" | "M";
+    grosime?: "0.05" | "0.10" | "0.15";
+    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
+    price?: number;
+    stock?: number;
+    _key: string;
+  }> | null;
+  description: Array<{
     children?: Array<{
       marks?: Array<string>;
       text?: string;
@@ -597,22 +634,8 @@ export type PRODUCT_BY_ID_QUERYResult = {
     alt?: string;
     _type: "image";
     _key: string;
-  }>;
-  variants?: Array<{
-    curbura?: "C" | "D" | "M";
-    grosime?: "0.05" | "0.10" | "0.15";
-    marime?: "10" | "11" | "12" | "13" | "14" | "15" | "7" | "8" | "9" | "mix";
-    price?: number;
-    stock?: number;
-    _key: string;
-  }>;
-  categories?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "category";
-  }>;
+  }> | null;
+  slug: Slug | null;
 } | null;
 
 // Source: ./sanity/lib/products/getProductsByCategory.ts
@@ -779,10 +802,11 @@ export type ACTIVE_SALE_BY_COUPON_CODE_QUERYResult = {
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
+    "\n    *[_type == \"course\"] {\n      \"name\": courseName,\n      courseIntervals[] {\n        startDate,\n        endDate\n      }\n    }\n  ": ALL_COURSES_QUERYResult;
     "\n    *[_type == \"order\" && clerkUserId == $userId] | order(_createdAt desc){\n    ...,\n    products[]{\n      ...,\n      product->\n    }\n  }\n": My_ORDERS_QUERYResult;
-    "\n    *[_type == \"category\"] {\n  _id,\n  _type,\n  _createdAt,\n  _updatedAt,\n  _rev,\n  title,\n  \"slug\": slug.current\n}": ALL_CATEGORIES_QUERYResult;
+    "\n    *[_type == \"category\"] {\n      _id,\n      _type,\n      _createdAt,\n      _updatedAt,\n      _rev,\n      title,\n      \"slug\": slug.current\n    }": ALL_CATEGORIES_QUERYResult;
     "\n            *[\n                _type == \"product\"\n            ] | order(name asc)\n        ": ALL_PRODUCTS_QUERYResult;
-    "*[\n    _type == \"product\" && slug.current == $slug\n    ] | order(name asc)[0]": PRODUCT_BY_ID_QUERYResult;
+    "*[\n    _type == \"product\" && slug.current == $slug\n    ] | order(name asc)[0] {\n      _id,\n      _type,\n      _createdAt,\n      _updatedAt,\n      _rev,\n      name,\n      price,\n      stock,\n      images,\n      image,\n      variants,\n      description,\n      slug\n    }": PRODUCT_BY_ID_QUERYResult;
     "\n        *[\n            _type == 'product' &&\n            references(*[_type == 'category' && slug.current == $categorySlug]._id)\n        ] | order(name asc)\n        ": PRODUCTS_BY_CATEGORY_QUERYResult;
     "*[\n    _type == \"product\"\n    && name match $searchParam\n    ] | order(name desc)": PRODUCT_SEARCH_QUERYResult;
     "*[\n        _type == \"sales\" \n        && isActive == true\n        && couponCode == $couponCode\n        && dateTime(now()) >= dateTime(validForm)\n        && dateTime(now()) <= dateTime(validUntil)\n    ] | order(validForm desc)[0]": ACTIVE_SALE_BY_COUPON_CODE_QUERYResult;

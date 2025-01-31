@@ -10,18 +10,17 @@ export async function GET(
     return new Response('Invoice ID is required.', { status: 400 });
   }
 
-  const encodedAuth = Buffer.from(
-    `${process.env.SMARTBILL_USERNAME}:${process.env.SMARTBILL_API_TOKEN}`
-  ).toString('base64');
+  const encodedAuth = 'bG9yZW5hbGFzaHN0dWRpb0BnbWFpbC5jb206MDAzfDIxZWQ5MzVlYWVlMTM0ZTgzMzgzNTFhYWZlYjQ5NmQy';
 
   try {
-    const url = `https://ws.smartbill.ro/SBORO/api/invoice/pdf?cif=${process.env.SMARTBILL_VAT_CODE}&seriesName=${process.env.SMARTBILL_SERIES_NAME}&number=${invoiceId}`;
+    const url = `https://ws.smartbill.ro/SBORO/api/invoice/pdf?cif=46510830&seriesname=LD&number=${invoiceId}`;
+
+    console.log('Requesting invoice from:', url);
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${encodedAuth}`,
-        'Accept': 'application/octet-stream, application/xml'  // Modificat acest header conform documentației SmartBill
+        'Authorization': `Basic ${encodedAuth}`
       }
     });
 
@@ -30,8 +29,7 @@ export async function GET(
       console.error('SmartBill API Error:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorText,
-        requestUrl: url // Pentru debugging
+        error: errorText
       });
       return new Response(
         `Eroare la obținerea facturii: ${response.statusText}`,
@@ -39,14 +37,7 @@ export async function GET(
       );
     }
 
-    // Log pentru debugging
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    console.log('Response content-type:', response.headers.get('content-type'));
-
     const pdfBuffer = await response.arrayBuffer();
-
-    // Log pentru debugging
-    console.log('PDF buffer size:', pdfBuffer.byteLength);
 
     return new Response(pdfBuffer, {
       headers: {

@@ -6,9 +6,6 @@ import { FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { imageUrl } from "@/lib/imageUrl";
 
-// 1) Define all the data types you need:
-
-/** Possible status values used throughout the code. */
 export type OrderStatus =
   | "In Asteptare"
   | "platita"
@@ -16,7 +13,6 @@ export type OrderStatus =
   | "canceled"
   | "refunded";
 
-/** Address structure. Adjust if needed. */
 export interface Address {
   firstName: string;
   lastName: string;
@@ -26,66 +22,59 @@ export interface Address {
   postalCode: string;
 }
 
-/** Optional billing details. Adjust if needed. */
 export interface BillingAddress {
   companyName?: string;
   cui?: string;
   tradeRegisterNumber?: string;
 }
 
-/** Product data. If your code references `.image`, `.name`, `.price`, ensure they're here. */
 export interface ProductData {
   name: string;
   price: number;
-  // If you store an image as a string or a special object, adapt it:
-  image?: string; 
-  // e.g. you might have: image?: { url: string } or something else
+  image?: string;
 }
 
-/** Each item in the `order.products` array. */
 export interface ProductLineItem {
   _key: string;
-  product: ProductData; 
+  product: ProductData;
   quantity: number;
   variant?: {
     curbura?: string;
     grosime?: string;
     marime?: string;
+    price?:number;
   };
 }
 
-/** Full order object. You can add or remove fields as needed. */
 export interface Order {
   _id: string;
   orderNumber: string;
   awb?: string | number;
-  orderDate: string;     // Must not be optional if you do `new Date(order.orderDate)`
-  products: ProductLineItem[];  // Must not be optional if you do `order.products.map(...)`
-  address?: Address;      // Must not be optional if you directly reference `order.address.xyz`
+  orderDate: string;
+  products: ProductLineItem[];
+  address?: Address;
   billingAddress?: BillingAddress;
-  totalPrice: number;    // Must not be optional if you pass it to `formatCurrency(...)`
-  shippingCost: number;  // Same reason
-  currency: string;      // Used in `formatCurrency(...)`
+  totalPrice: number;
+  shippingCost: number;
+  currency: string;
   invoice?: { number: string };
   status: OrderStatus;
   paymentType: string;
-  amountDiscount?: number; // If you reference `order.amountDiscount`
+  amountDiscount?: number;
 }
 
-/** Props for the OrdersClient component. It expects an array of orders. */
 interface OrdersClientProps {
   orders: Order[];
 }
 
 const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
-  // State
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState<"all" | OrderStatus>("all");
   const [isLoading, setIsLoading] = useState(false);
 
   const itemsPerPage = 5;
+  console.log("orders: ", orders);
 
-  // 2) Helper to cancel an order
   const handleCancelOrder = async (orderNumber: string) => {
     setIsLoading(true);
     try {
@@ -100,11 +89,10 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
     }
   };
 
-  // 3) Helper to download invoice
-  const handleDownloadInvoice = async (orderNumber: string) => {
+  const handleDownloadInvoice = async (invoiceId: string) => {
     try {
-      console.log("orderNumber: ", orderNumber);
-      const response = await fetch(`/invoice/${orderNumber}/download`);
+      console.log("invoiceNumber: ", invoiceId);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/invoice/${invoiceId}/download`);
       if (!response.ok) throw new Error("Failed to download invoice");
       
       const blob = await response.blob();
@@ -112,25 +100,21 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
       
       const a = document.createElement("a");
       a.href = url;
-      a.download = `factura_${orderNumber}.pdf`;
+      a.download = `factura_${invoiceId}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      // If you have a toast library, you can show a toast here:
-      // toast.error("Eroare la descărcarea facturii");
       console.error("Eroare la descărcarea facturii:", error);
     }
   };
 
-  // 4) Filter by status
   const filteredOrders =
     selectedStatus === "all"
       ? orders
       : orders.filter((order) => order.status === selectedStatus);
 
-  // 5) Pagination
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -150,7 +134,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
     setCurrentPage(1);
   };
 
-  // 6) Return a CSS class for each status
   const getStatusClass = (status: OrderStatus) => {
     switch (status) {
       case "platita":
@@ -168,7 +151,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
     }
   };
 
-  // 7) Render
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
       <div className="bg-white p-4 sm:p-8 rounded-lg shadow-md w-full max-w-4xl">
@@ -176,7 +158,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
           Comenzile Mele
         </h1>
 
-        {/* Status Filter */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Filtrează după status
@@ -206,9 +187,7 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                 key={order.orderNumber}
                 className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
               >
-                {/* Order Header */}
                 <div className="p-4 sm:p-6 border-b border-gray-200">
-                  {/* Top Row: orderNumber + AWB */}
                   <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
                     <div>
                       <p className="text-sm text-gray-600 mb-1 font-bold">
@@ -230,14 +209,12 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                     </div>
                   </div>
 
-                  {/* Products */}
                   <div className="space-y-4">
                     {order.products.map((productItem) => (
                       <div
                         key={productItem._key}
                         className="flex gap-4 border-t pt-4"
                       >
-                        {/* If there's an image, show it */}
                         {productItem.product.image && (
                           <Image
                             src={imageUrl(productItem.product.image).url()}
@@ -256,10 +233,9 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                           </p>
                           <p className="text-sm text-gray-600">
                             Preț:{" "}
-                            {formatCurrency(
-                              productItem.product.price * productItem.quantity,
-                              order.currency
-                            )}
+                            {
+                              (productItem?.variant?.price ?? 0) * productItem.quantity
+                            } RON 
                           </p>
                           {productItem.variant && (
                             <div className="text-sm text-gray-600">
@@ -279,7 +255,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                     ))}
                   </div>
 
-                  {/* Shipping Address */}
                   <div className="mt-4 pt-4 border-t">
                     <h3 className="font-medium mb-2">Adresa de livrare</h3>
                     <p className="text-sm text-gray-600">
@@ -293,7 +268,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                     </p>
                   </div>
 
-                  {/* Billing Address */}
                   {order.billingAddress && (
                     <div className="mt-4 pt-4 border-t">
                       <h3 className="font-medium mb-2">Detalii Facturare</h3>
@@ -304,15 +278,22 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                             <br />
                           </>
                         )}
-                        {order.billingAddress.cui && <>CUI: {order.billingAddress.cui}<br /></>}
+                        {order.billingAddress.cui && (
+                          <>
+                            CUI: {order.billingAddress.cui}
+                            <br />
+                          </>
+                        )}
                         {order.billingAddress.tradeRegisterNumber && (
-                          <>Reg. Com.: {order.billingAddress.tradeRegisterNumber}<br /></>
+                          <>
+                            Reg. Com.: {order.billingAddress.tradeRegisterNumber}
+                            <br />
+                          </>
                         )}
                       </p>
                     </div>
                   )}
 
-                  {/* Order Totals */}
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Subtotal:</span>
@@ -334,7 +315,7 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">Reducere:</span>
                           <span className="text-red-600">
-                            -{formatCurrency(order.amountDiscount, order.currency)}
+                            {order.amountDiscount}%
                           </span>
                         </div>
                       )}
@@ -346,11 +327,10 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                     </div>
                   </div>
 
-                  {/* Invoice Download */}
                   {order.invoice && (
                     <div className="mt-4 pt-4 border-t">
                       <button
-                        onClick={() => handleDownloadInvoice(order.orderNumber)}
+                        onClick={() => handleDownloadInvoice(order.invoice?.number ?? "")}
                         className="inline-flex items-center text-blue-600 hover:text-blue-800"
                       >
                         <FileText className="w-4 h-4 mr-2" />
@@ -360,10 +340,8 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                   )}
                 </div>
 
-                {/* Status + Cancel Button + Payment */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center p-4">
                   <div className="flex items-center gap-4">
-                    {/* Status Badge */}
                     <div className="flex items-center gap-1">
                       <span className="text-sm">Status:</span>
                       <span
@@ -375,7 +353,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                       </span>
                     </div>
 
-                    {/* Cancel Button if "In Asteptare" or "platita" */}
                     {(order.status === "In Asteptare" ||
                       order.status === "platita") && (
                       <button
@@ -396,7 +373,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                     )}
                   </div>
 
-                  {/* Payment Method */}
                   <div className="sm:text-right">
                     <p className="text-sm text-gray-600 mb-1">Metodă de plată</p>
                     <p className="font-medium">{order.paymentType}</p>
@@ -405,7 +381,6 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
               </div>
             ))}
 
-            {/* Pagination */}
             <div className="flex justify-between mt-6">
               <button
                 onClick={handlePreviousPage}
