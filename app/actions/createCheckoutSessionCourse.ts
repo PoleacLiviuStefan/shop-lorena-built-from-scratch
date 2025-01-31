@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 
 export async function createCheckoutSessionCourse() {
-  const stripe = new Stripe(process.env.NEXT_STRIPE_SECRET_KEY as string, {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: '2024-12-18.acacia',
   });
 
@@ -13,7 +13,7 @@ export async function createCheckoutSessionCourse() {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.NEXT_STRIPE_COURSE_PRICE_ID,
+          price: process.env.STRIPE_COURSE_PRICE_ID,
           quantity: 1,
         },
       ],
