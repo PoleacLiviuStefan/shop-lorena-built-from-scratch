@@ -91,7 +91,7 @@ useEffect(() => {
 const handleApplyPromo = () => {
   setPromoError(null);
   const discount = availablePromoCodes[promoCode];
-  
+  console.log("availablePromoCodes este: ", availablePromoCodes);
   if (!promoCode) {
     setPromoError('Introduceți un cod promoțional');
     return;

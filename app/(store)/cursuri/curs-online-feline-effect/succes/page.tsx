@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import emailjs from '@emailjs/browser';
+import Link from 'next/link';
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
@@ -156,7 +157,7 @@ export default function SuccessPage() {
                 <strong>Email:</strong> {orderDetails.clientEmail}
               </p>
               <p className="text-red-700">
-                Salvează codul pentru a-l introduce atunci când se lansează cursul!
+                Salvează codul si il poti introduce <Link href="/cursuri/curs-online-feline-effect">aici</Link>.
                 <br />
                 <strong>COD: {orderDetails.uniqueCode}</strong>
               </p>

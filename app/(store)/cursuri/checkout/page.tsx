@@ -112,11 +112,11 @@ const Buy = () => {
   )
 
   const perioadeCurs = [
-   ["28-29 Ianuarie", "17-18 Februare", "24-25 Martie"],
-   ["15-16 Ianuare", "19-20 Februarie",'25-26 Martie'],
-   [],
-   ["28-29-30 Ianuarie","17-18-19 Februarie","24-25-26 Martie"]
-  ]
+    ["17-18 Februarie", "24-25 Februarie", "24-25 Martie"],
+    ["19-20 Februarie",'25-26 Martie'],
+    [],
+    ["24-25-26 Februarie","24-25-26 Martie"]
+   ]
 
   const fetchAvailableDates = async () => {
     try {
