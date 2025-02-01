@@ -63,12 +63,10 @@ interface BasketState {
   isProcessing: boolean;
   error: string | null;
   currentStep: CheckoutStep;
-  shippingCost: number | null;
   promoCode: string | null;
   promoDiscount: number;
 
   setPromoCode: (code: string | null, discount: number) => void;
-  setShippingCost: (cost: number) => void;
   setCheckoutStep: (step: CheckoutStep) => void;
   
   // User Management
@@ -100,6 +98,8 @@ interface BasketState {
   setError: (error: string | null) => void;
 }
 
+const SHIPPING_COST = 25;
+
 const useBasketStore = create<BasketState>()(
   persist(
     (set, get) => ({
@@ -122,7 +122,7 @@ const useBasketStore = create<BasketState>()(
           promoDiscount: discount,
         }),
 
-      setShippingCost: (cost) => set({ shippingCost: cost }),
+
       
       setCheckoutStep: (step) => set({ currentStep: step }),
 
@@ -273,9 +273,8 @@ const useBasketStore = create<BasketState>()(
             (item.variant?.price  ?? 0) * item.quantity,
           0
         );
-        const shippingCost = get().shippingCost ?? 0;
         const promoDiscount = get().promoDiscount;
-        return subtotal + shippingCost - promoDiscount;
+        return subtotal + SHIPPING_COST - promoDiscount;
       },
 
       getItemCount: (productId) => {
@@ -293,7 +292,7 @@ const useBasketStore = create<BasketState>()(
             (item.variant?.price  ?? 0) * item.quantity,
           0
         );
-        const shipping = get().shippingCost ?? 0;
+        const shipping = SHIPPING_COST  ;
         const promoDiscount = get().promoDiscount;
         return {
           subtotal,
@@ -361,7 +360,6 @@ const useBasketStore = create<BasketState>()(
         paymentMethod: state.paymentMethod,
         userId: state.userId,
         currentStep: state.currentStep,
-        shippingCost: state.shippingCost,
         promoCode: state.promoCode,
         promoDiscount: state.promoDiscount,
       }),

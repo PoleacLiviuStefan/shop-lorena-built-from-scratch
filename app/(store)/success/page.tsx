@@ -175,8 +175,8 @@ const SuccessPage = () => {
         order_shipping_cost: `${details.shippingCost.toFixed(2)} ${details.currency}`,
         order_products: details.products.map((product) => (
           `${product.product.name} - ${
-            product.variant 
-              ? `Curbura: ${product.variant.curbura}, Grosime: ${product.variant.grosime}, Mărime: ${product.variant.marime}` 
+            product?.variant?.curbura && product.variant.curbura.trim() !== '' ? 
+              `Curbura: ${product.variant.curbura}, Grosime: ${product.variant.grosime}, Mărime: ${product.variant.marime}` 
               : "Standard"
           } - Cantitate: ${product.quantity}`
         )).join("\n"),
@@ -203,14 +203,14 @@ const SuccessPage = () => {
       };
 
       const notificationData = {
-        client_last_name: details.customerName.split(" ").slice(-1).join(" "),
-        client_first_name: details.customerName.split(" ").slice(0, -1).join(" "),
+        client_last_name: details.address.lastName,
+        client_first_name: details.address.firstName,
         client_email: details.address.email,
         order_id: details.orderNumber,
         order_discount: details.discount,
         order_promo_code: details.promoCode,
         order_products: emailData.order_products,
-        awb: details.awb,
+        // awb: details.awb,
         invoice_url: emailData.invoice_url,
         order_total: emailData.order_total,
         order_products_total: emailData.order_products_total,
@@ -340,13 +340,13 @@ const SuccessPage = () => {
                   <p className="font-medium text-gray-900 uppercase">
                     {product.product.name}
                   </p>
-                  {product.variant ? (
+                  {product?.variant?.curbura && product.variant.curbura.trim() !== ''  ? (
                     <div className="text-sm text-gray-600 mt-1">
                       <p>Curbura: {product.variant.curbura}</p>
                       <p>Grosime: {product.variant.grosime}</p>
                       <p>Mărime: {product.variant.marime}</p>
                     </div>
-                  ) : (
+                  ) : ( 
                     <p className="text-sm text-gray-600 mt-1">Standard</p>
                   )}
                   <p className="text-sm text-gray-600">

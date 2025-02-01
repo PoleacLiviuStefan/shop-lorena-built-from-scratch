@@ -3,6 +3,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateInvoice } from "@/lib/generateInvoice";
 import { Product, BillingAddress, ProductVariant } from "../../types/interfaces";
 
+
+interface Address {
+  street: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -14,10 +26,9 @@ export async function POST(req: NextRequest) {
       products,
       totalPrice,
       currency,
-      address,
+      address,  // acum va fi de tip Address
       billingAddress,
       shippingCost,
-      awb,
       discount,
       promoCode,
     }: {
@@ -28,10 +39,9 @@ export async function POST(req: NextRequest) {
       products: Product[];
       totalPrice: number;
       currency: string;
-      address: string;
+      address: Address;  // modificat aici
       billingAddress?: BillingAddress;
       shippingCost: number;
-      awb: string;
       discount: number;
       promoCode: string;
     } = body;
@@ -49,12 +59,25 @@ export async function POST(req: NextRequest) {
         quantity: product.quantity,
         price: product.price,
       }));
-
+    
+      // Împărțim customerName în firstName și lastName
+      const [firstName, ...lastNameParts] = customerName.split(' ');
+      const lastName = lastNameParts.join(' ');
+    
       const invoice = await generateInvoice(
         orderNumber,
         items,
         billingAddress,
-        billingAddress?.isLegalEntity || false
+        billingAddress?.isLegalEntity || false,
+        {
+          firstName,
+          lastName,
+          address: address.street,
+          city: address.city,
+          county: address.province
+        },
+        shippingCost,
+        discount
       );
       invoiceNumber = invoice.number;
       console.log("Invoice:", invoice);
@@ -113,7 +136,7 @@ export async function POST(req: NextRequest) {
       billingAddress,
       status: "In Asteptare",
       orderDate: new Date().toISOString(),
-      awb,
+      // awb,
       invoice: {
         number: invoiceNumber,
         series: process.env.SMARTBILL_SERIES_NAME,

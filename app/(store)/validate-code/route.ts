@@ -21,16 +21,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cod invalid sau deja folosit" }, { status: 404 });
     }
 
+    // Verifică data creării codului pentru bonus
+    const cutoffDate = new Date('2025-02-01T20:20:00Z');
+    const createdAt = new Date(existingCode.createdAt); 
+    console.log("createdAT: ", createdAt);
+    const hasBonusAccess = createdAt < cutoffDate;
+
     await backendClient.patch(existingCode._id).set({ isUsed: true, userId }).commit();
-    const clerk =await clerkClient();
+    
+    const clerk = await clerkClient();
     await clerk.users.updateUserMetadata(userId, {
       publicMetadata: {
         hasCourseAccess: true,
+        hasBonusAccess: hasBonusAccess
       },
     });
 
-    console.log(`Codul ${code} a fost folosit de utilizatorul ${userId}.`);
-    return NextResponse.json({ success: true, message: "Cod valid. Acces permis!" }, { status: 200 });
+    console.log(`Codul ${code} a fost folosit de utilizatorul ${userId}. Acces bonus: ${hasBonusAccess}`);
+    return NextResponse.json({ 
+      success: true, 
+      message: "Cod valid. Acces permis!",
+      hasBonusAccess
+    }, { status: 200 });
   } catch (error) {
     console.error("Eroare validare cod:", error);
     return NextResponse.json({ error: "Eroare server" }, { status: 500 });

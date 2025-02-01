@@ -54,7 +54,7 @@ interface BillingAddress {
 
 interface Order {
   orderNumber: string;
-  awb: number;
+  // awb: number;
   paymentType: string;
   status: string;
   orderDate: string;

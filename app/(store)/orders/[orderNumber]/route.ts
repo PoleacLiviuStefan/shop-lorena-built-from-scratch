@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 interface OrderDetails {
  orderNumber: string;
- awb: number; 
+//  awb: number; 
  paymentType: string;
  status: string;
  orderDate: string;
