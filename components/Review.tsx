@@ -6,18 +6,18 @@ import useBasketStore from "@/app/(store)/store";
 import { useRouter } from "next/navigation";
 import { createCheckoutSession } from "../app/actions/createCheckoutSession";
 import type { Metadata } from "../app/actions/createCheckoutSession";
-import { generateAwb } from "@/lib/fanCourier";
 import type { PaymentMethod, BasketItem, Address, BillingAddress } from "@/app/(store)/store";
+import { SHIPPING_COST } from "@/lib/constants";
+
+
 
 interface StoreData {
   paymentMethod: PaymentMethod;
   groupedItems: BasketItem[];
   shippingAddress: Address | null;
   billingAddress: BillingAddress | null;
-  shippingCost: number;
   promoCode: string | null;
   promoDiscount: number;
-  awb: string;
 }
 
 interface ReviewProps {
@@ -36,10 +36,9 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
     groupedItems: [],
     shippingAddress: null,
     billingAddress: null,
-    shippingCost: 0,
     promoCode: null,
     promoDiscount: 0,
-    awb: "",
+
   });
 
   useEffect(() => {
@@ -49,17 +48,14 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       groupedItems: store.getGroupedItems(),
       shippingAddress: store.shippingAddress,
       billingAddress: store.billingAddress,
-      shippingCost: store.shippingCost || 0,
       promoCode: store.promoCode || null,
       promoDiscount: store.promoDiscount || 0,
-      awb: "",
     });
     setMounted(true);
   }, []);
 
   const shippingAddressInStore = useBasketStore((s) => s.shippingAddress);
   const billingAddressInStore = useBasketStore((s) => s.billingAddress);
-  const shippingCostInStore = useBasketStore((s) => s.shippingCost);
   const promoCodeInStore = useBasketStore((s) => s.promoCode);
   const promoDiscountInStore = useBasketStore((s) => s.promoDiscount);
 
@@ -69,19 +65,18 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       ...prev,
       shippingAddress: store.shippingAddress,
       billingAddress: store.billingAddress,
-      shippingCost: store.shippingCost || 0,
       promoCode: store.promoCode || null,
       promoDiscount: store.promoDiscount || 0,
     }));
   }, [
     shippingAddressInStore,
     billingAddressInStore,
-    shippingCostInStore,
     promoCodeInStore,
     promoDiscountInStore,
   ]);
 
   const handleCheckout = async () => {
+    console.log(isSignedIn, storeData.paymentMethod, storeData.shippingAddress)
     if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
       console.error("Date lipsă pentru checkout");
       return;
@@ -93,10 +88,10 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       if (storeData.paymentMethod === "card") {
         const metadata: Metadata = {
           orderNumber: crypto.randomUUID(),
-          customerName: user?.fullName ?? "Unknown",
+          customerName: user?.fullName ?? (storeData.shippingAddress.firstName + " " + storeData.shippingAddress.lastName),
           customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
           clerkUserId: user?.id ?? "",
-          shippingCost: storeData.shippingCost.toString(),
+          shippingCost: SHIPPING_COST.toString(),
           firstName: storeData.shippingAddress.firstName,
           lastName: storeData.shippingAddress.lastName,
           phone: storeData.shippingAddress.phone,
@@ -144,32 +139,32 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       const discountAmount = storeData.promoDiscount
         ? (subtotal * storeData.promoDiscount) / 100
         : 0;
-      const finalTotal = subtotal - discountAmount + storeData.shippingCost;
+      const finalTotal = subtotal - discountAmount + SHIPPING_COST;
 
-      const awbNumber = await generateAwb({
-        cart: {
-          id: orderNumber,
-          shipping_address: {
-            first_name: storeData.shippingAddress?.firstName || "",
-            last_name: storeData.shippingAddress?.lastName || "",
-            phone: storeData.shippingAddress?.phone || "",
-            email: user?.emailAddresses[0]?.emailAddress ?? "",
-            province: storeData.shippingAddress?.province || "",
-            city: storeData.shippingAddress?.city || "",
-            address_1: storeData.shippingAddress?.street || "",
-            address_2: "",
-            postal_code: storeData.shippingAddress?.postalCode || "",
-          },
-        },
-      });
+      // const awbNumber = await generateAwb({
+      //   cart: {
+      //     id: orderNumber,
+      //     shipping_address: {
+      //       first_name: storeData.shippingAddress?.firstName || "",
+      //       last_name: storeData.shippingAddress?.lastName || "",
+      //       phone: storeData.shippingAddress?.phone || "",
+      //       email: user?.emailAddresses[0]?.emailAddress ?? "",
+      //       province: storeData.shippingAddress?.province || "",
+      //       city: storeData.shippingAddress?.city || "",
+      //       address_1: storeData.shippingAddress?.street || "",
+      //       address_2: "",
+      //       postal_code: storeData.shippingAddress?.postalCode || "",
+      //     },
+      //   },
+      // });
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cash-on-delivery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderNumber,
-          customerName: user?.fullName ?? "Unknown",
-          customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
+          customerName: user?.fullName ?? (storeData.shippingAddress?.lastName + ' ' + storeData.shippingAddress?.firstName),
+          customerEmail: user?.emailAddresses[0]?.emailAddress ?? storeData?.shippingAddress?.email,
           clerkUserId: user?.id,
           products: storeData.groupedItems.map((item) => ({
             productId: item.product._id,
@@ -190,12 +185,12 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
           discount: storeData.promoDiscount,
           subtotal,
           discountAmount,
-          shippingCost: storeData.shippingCost,
+          shippingCost: SHIPPING_COST,
           totalPrice: finalTotal,
           currency: "RON",
           address: storeData.shippingAddress,
           billingAddress: storeData.billingAddress,
-          awb: awbNumber,
+          // awb: awbNumber,
         }),
       });
 

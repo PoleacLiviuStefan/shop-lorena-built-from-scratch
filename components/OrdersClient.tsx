@@ -194,12 +194,12 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                         Numărul Comenzii:{" "}
                         <span className="text-green-600">{order.orderNumber}</span>
                       </p>
-                      {order.awb && (
+                      {/* {order.awb && (
                         <p className="text-sm text-gray-600 mt-1">
                           <span className="font-bold">AWB: </span>
                           {order.awb}
                         </p>
-                      )}
+                      )} */}
                     </div>
                     <div className="sm:text-right">
                       <p className="text-sm text-gray-600 mb-1">Data Comenzii</p>

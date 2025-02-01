@@ -5,25 +5,24 @@ import Image from 'next/image';
 import useBasketStore from '../app/(store)/store';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import getCustomShippingCost from '@/lib/fanCourier';
+// import getCustomShippingCost from '@/lib/fanCourier';
 import { imageUrl } from '@/lib/imageUrl';
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname } from 'next/navigation';
 import { getActiveSalesCoupons } from '@/sanity/lib/sales/getActiveSalesCoupons';
 import { SignInButton, useAuth } from '@clerk/nextjs';
+import { SHIPPING_COST } from '@/lib/constants';
 
 const CheckoutSummary = () => {
   const groupedItems = useBasketStore((state) => state.getGroupedItems());
   const totalPrice = useBasketStore((state) => state.getTotalPrice());
-  const shippingAddress = useBasketStore((state) => state.getShippingAddress());
-  const setShippingCost = useBasketStore((state) => state.setShippingCost);
   const savedPromoCode = useBasketStore((state) => state.promoCode);
   const savedPromoDiscount = useBasketStore((state) => state.promoDiscount);
   const pathname = usePathname();
   
   const [isLoading, setIsLoading] = useState(true);
-  const [shippingCost, setLocalShippingCost] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // const [shippingCost, setLocalShippingCost] = useState<number | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -69,24 +68,24 @@ useEffect(() => {
   }
 }, [savedPromoCode, savedPromoDiscount]);
 
-useEffect(() => {
-  const fetchShippingCost = async () => {
-    if (!shippingAddress || !shippingAddress.city || !shippingAddress.province) {
-      setError('Adresa de livrare este incompletă.');
-      return;
-    }
+// useEffect(() => {
+//   const fetchShippingCost = async () => {
+//     if (!shippingAddress || !shippingAddress.city || !shippingAddress.province) {
+//       setError('Adresa de livrare este incompletă.');
+//       return;
+//     }
 
-    try {
-      const cost = await getCustomShippingCost({ shipping_address: shippingAddress });
-      setLocalShippingCost(cost);
-      setShippingCost(cost);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+//     try {
+//       const cost = await getCustomShippingCost({ shipping_address: shippingAddress });
+//       setLocalShippingCost(cost);
+//       setShippingCost(cost);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
 
-  fetchShippingCost();
-}, [shippingAddress, setShippingCost]);
+//   fetchShippingCost();
+// }, [shippingAddress, setShippingCost]);
 
 const handleApplyPromo = () => {
   setPromoError(null);
@@ -118,7 +117,7 @@ const handleRemovePromo = () => {
   // Calculare total cu discount
   const subtotal = totalPrice;
   const discountAmount = (subtotal * promoDiscount) / 100;
-  const finalTotal = subtotal - discountAmount + (shippingCost || 0);
+  const finalTotal = subtotal - discountAmount + (SHIPPING_COST || 0);
 
   if (isLoading) {
     return (
@@ -258,7 +257,7 @@ const handleRemovePromo = () => {
           </div>
         )}
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
         
         {/* Sumar costuri */}
         <div className="space-y-3 pt-4">
@@ -274,12 +273,12 @@ const handleRemovePromo = () => {
             </div>
           )}
 
-          {shippingCost !== null && (
+         
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Cost Livrare</span>
-              <span>{shippingCost.toFixed(2)} lei</span>
+              <span>{SHIPPING_COST.toFixed(2)} lei</span>
             </div>
-          )}
+       
 
           <div className="flex justify-between items-center pt-3 border-t font-medium text-base">
             <span>Total (incl. TVA)</span>

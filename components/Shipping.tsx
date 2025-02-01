@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircle, Pencil } from "lucide-react";
-import useBasketStore from "@/app/(store)/store";
-import getCustomShippingCost from '@/lib/fanCourier';
+
+import {SHIPPING_COST} from '@/lib/constants';
 
 interface ShippingProps {
   isActive: boolean;
@@ -14,12 +14,11 @@ interface ShippingProps {
 
 const Shipping = ({ isActive, onComplete, showEditButton, onEdit  }: ShippingProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  const shippingAddress = useBasketStore((state) => state.shippingAddress);
-  const setShippingCost = useBasketStore((state) => state.setShippingCost);
-  const shippingCost = useBasketStore((state) => state.shippingCost);
+  // const shippingAddress = useBasketStore((state) => state.shippingAddress);
+
 
   const deliveryMethod = {
     id: "home_delivery",
@@ -28,37 +27,37 @@ const Shipping = ({ isActive, onComplete, showEditButton, onEdit  }: ShippingPro
   };
 
   // Calculăm costul de livrare când se schimbă adresa
-  useEffect(() => {
-    const fetchShippingCost = async () => {
-      if (!shippingAddress || !shippingAddress.city || !shippingAddress.province) {
-        setError('Adresa de livrare este incompletă.');
-        return;
-      }
+  // useEffect(() => {
+  //   const fetchShippingCost = async () => {
+  //     if (!shippingAddress || !shippingAddress.city || !shippingAddress.province) {
+  //       setError('Adresa de livrare este incompletă.');
+  //       return;
+  //     }
 
-      try {
-        const cost = await getCustomShippingCost({ shipping_address: shippingAddress });
-        setShippingCost(cost);
-        setError(null);
-      } catch (err) {
-        setError('Eroare la calcularea costului de livrare.');
-        console.error(err);
-      }
-    };
+  //     try {
+  //       const cost = await getCustomShippingCost({ shipping_address: shippingAddress });
+  //       setShippingCost(cost);
+  //       setError(null);
+  //     } catch (err) {
+  //       setError('Eroare la calcularea costului de livrare.');
+  //       console.error(err);
+  //     }
+  //   };
 
-    if (mounted) {
-      fetchShippingCost();
-    }
-  }, [shippingAddress, mounted, setShippingCost]);
+  //   if (mounted) {
+  //     fetchShippingCost();
+  //   }
+  // }, [shippingAddress, mounted, setShippingCost]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleSubmit = () => {
-    if (!shippingCost) {
-      setError('Costul de livrare nu a putut fi calculat.');
-      return;
-    }
+    // if (!shippingCost) {
+    //   setError('Costul de livrare nu a putut fi calculat.');
+    //   return;
+    // }
 
     setIsLoading(true);
     setTimeout(() => {
@@ -104,23 +103,23 @@ const Shipping = ({ isActive, onComplete, showEditButton, onEdit  }: ShippingPro
             <div>
               <h3 className="font-medium">{deliveryMethod.name}</h3>
               <p className="text-sm text-gray-500">{deliveryMethod.description}</p>
-              {shippingCost !== null && (
+              {SHIPPING_COST !== null && (
                 <p className="text-sm font-medium mt-2">
-                  Cost livrare: {formatPrice(shippingCost)}
+                  Cost livrare: {formatPrice(SHIPPING_COST)}
                 </p>
               )}
             </div>
           </div>
 
-          {error && (
+          {/* {error && (
             <div className="mt-4 p-4 bg-red-50 text-red-500 rounded-lg">
               {error}
             </div>
-          )}
+          )} */}
 
           <button
             onClick={handleSubmit}
-            disabled={isLoading || !shippingCost}
+            disabled={isLoading}
             className="mt-6 w-full bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
@@ -139,12 +138,12 @@ const Shipping = ({ isActive, onComplete, showEditButton, onEdit  }: ShippingPro
             <span className="font-medium">Metodă selectată:</span>
             <span>{deliveryMethod.name}</span>
           </div>
-          {shippingCost !== null && (
+
             <div className="mt-2">
               <span className="font-medium">Cost livrare:</span>{" "}
-              <span>{formatPrice(shippingCost)}</span>
+              <span>{formatPrice(SHIPPING_COST)}</span>
             </div>
-          )}
+        
         </div>
       )}
 

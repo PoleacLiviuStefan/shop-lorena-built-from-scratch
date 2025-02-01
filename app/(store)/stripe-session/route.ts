@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    console.log("Cod de acces creat:", accessCode);
+
 
     return NextResponse.json({
       clientName,
