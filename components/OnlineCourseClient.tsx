@@ -162,7 +162,7 @@ export default function OnlineCourseClient({ hasAccess = false }: OnlineCourseCl
 
            <div className="max-w-2xl text-center space-y-4">
              <h3 className="text-2xl font-bold mb-4">
-               CURS ONLINE FELINE EFFECT – REDUCRE 40% PANA DUMINICA 2 FEBRUARIE
+               CURS ONLINE FELINE EFFECT – REDUCERE 40% PANA DUMINICA 2 FEBRUARIE
              </h3>
              <p className="text-gray-600">
                In primul rand, felicitari pentru ca ai ajuns aici pe pagina, inseamna ca iti doresti EVOLUTIE, ai venit la
