@@ -15,7 +15,13 @@ interface OnlineCourseClientProps {
 const CourseContent = () => (
  <div className="flex flex-col items-center min-h-screen w-full max-w-4xl px-4">
    
-   <iframe src="https://drive.google.com/file/d/17ujCUNU-Sbg_7u1FQrjK30uiGZaSzDXj/preview" className="w-full h-[500px]"></iframe>
+   <iframe 
+  src="https://www.youtube.com/embed/b99mR4y6Jgs?rel=0&modestbranding=1" 
+  className="w-full h-[500px]" 
+  frameBorder="0" 
+  allowFullScreen
+></iframe>
+
 
   
    <a 
