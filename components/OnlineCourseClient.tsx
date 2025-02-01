@@ -44,6 +44,7 @@ const CourseContent = ({ hasBonusAccess }: { hasBonusAccess: boolean }) => (
       </a>
     )}
   </div>
+
 );
 
 export default function OnlineCourseClient({
@@ -212,4 +213,54 @@ export default function OnlineCourseClient({
       )}
     </div>
   );
+}
+
+               
+             </div>
+
+             <div className="mt-8 grid grid-cols-1 gap-6 w-full">
+               <div className="bg-white p-6 rounded-lg shadow-sm">
+                 <h4 className="font-semibold mb-2">✨ Acces Permanent</h4>
+                 <p className="text-sm text-gray-600">
+                   Revezi materialaul oricând dorești
+                 </p>
+               </div>
+             </div>
+           </div>
+
+           <div className="max-w-2xl text-center space-y-4">
+             <h3 className="text-2xl font-bold mb-4">
+               CURS ONLINE FELINE EFFECT – REDUCERE 40% PANA DUMINICA 2 FEBRUARIE
+             </h3>
+             <p className="text-gray-600">
+               In primul rand, felicitari pentru ca ai ajuns aici pe pagina, inseamna ca iti doresti EVOLUTIE, ai venit la
+               locul potrivit. Fie ca iti doresti sa iti maresti veniturile, sa aduci ceva NOU clientelor tale sau pur si simplu
+               ti-a placut efectul si vrei sa il inveti, eu sper ca din tot acest curs sa nu ramai doar cu tehnica, ci cu o
+               amintire si o emotie, pe tot parcursul cursului voi vorbi despre trairile mele in aceasta meserie asa ca
+               abia astept sa-mi fi alaturi.
+             </p>
+             <h3 className="font-bold text-lg lg:text-xl">Ce subiecte dezbat?</h3>
+             <ul className="text-gray-600 text-left">
+               <li>ABSOLUT TOATE SECRETELE ACESTUI EFECT</li>
+               <li>TEHNICA EVANTAI INTR-O SECUNDA</li>
+               <li>PROMOVARE, PROMOVARE, PROMOVARE, CHEIA SUCCESULUI</li>
+               <li>TIMPUL, IN FAVOAREA TA</li>
+               <li>TIPURI DE CLIENTE SI CUM SA LE MULTUMESTI</li>
+               <li>PRODUSELE IDEALE</li>
+               <li>DESPRE EVOLUTIE SI COSTURILE EI</li>
+               <li>CRESTEM CIFRELE IN ONLINE</li>
+               <li>CUM SA VINZI CEEA CE FACI</li>
+               <li>SI ALTELE</li>
+             </ul>
+             <p className="text-gray-600">
+               Te astept pentru a trece la urmatorul nivel, EFECTE SPECIALE pentru cine doreste sa VANDA si sa-si
+               mareasca profitul. Toate acestea la pachet cu PROMOVAREA ta, nu uita ca tu esti BRAND-ul tau, fii
+               autentic, fii tu! 
+             </p>
+           </div>
+         </div>
+       </div>
+     )}
+   </div>
+ );
 }
