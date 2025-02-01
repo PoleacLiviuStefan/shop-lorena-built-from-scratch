@@ -19,7 +19,7 @@ const CourseContent = () => (
 
   
    <a 
-       href="/Imagini/cursuri/bonus.pdf"
+       href="https://www.lorenalash.ro/Imagini/cursuri/bonus.pdf"
        download
        className="inline-flex items-center px-4 py-2 mt-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
      >
