@@ -180,7 +180,7 @@ export default function OnlineCourseClient({ hasAccess = false }: OnlineCourseCl
              <p className="text-gray-600">
                Te astept pentru a trece la urmatorul nivel, EFECTE SPECIALE pentru cine doreste sa VANDA si sa-si
                mareasca profitul. Toate acestea la pachet cu PROMOVAREA ta, nu uita ca tu esti BRAND-ul tau, fii
-               autentic, fii tu!
+               autentic, fii tu! 
              </p>
            </div>
          </div>
