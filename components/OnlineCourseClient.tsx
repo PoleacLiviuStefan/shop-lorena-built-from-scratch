@@ -16,11 +16,12 @@ const CourseContent = () => (
  <div className="flex flex-col items-center min-h-screen w-full max-w-4xl px-4">
    
    <iframe 
-  src="https://www.youtube.com/embed/b99mR4y6Jgs?rel=0&modestbranding=1" 
+  src="https://www.youtube.com/embed/qv1IN-bxq58?rel=0&modestbranding=1" 
   className="w-full h-[500px]" 
   frameBorder="0" 
   allowFullScreen
 ></iframe>
+
 
 
   
