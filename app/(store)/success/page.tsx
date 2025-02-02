@@ -219,7 +219,7 @@ const SuccessPage = () => {
 
       await Promise.all([
         emailjs.send("service_5kulkwh", "template_soo87le", emailData, "uSA0IVA9aGhfzQfPC"),
-        emailjs.send("service_5kulkwh", "template_kbk4s1r", notificationData, "uSA0IVA9aGhfzQfPC")
+        emailjs.send("lorenadanoiu", "template_x4fyyyr", notificationData, "jkddlsCqSLugxlMFY")
       ]);
 
       console.log("Emailuri trimise cu succes!");

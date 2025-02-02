@@ -35,7 +35,7 @@ const Success: React.FC = () => {
       user_telefon: localStorage.getItem('user_telefon') || '',
       user_email: localStorage.getItem('user_email') || '',
       user_adresa: localStorage.getItem('user_adresa') || '',
-      tip_curs: localStorage.getItem('tip_curs') || '',
+      tip_curs: localStorage.getItem('selectedPeriod') || '' + localStorage.getItem('cumparaCurs') || '',
       data_vip: localStorage.getItem('data_vip') || '',
       mentiuni_speciale: localStorage.getItem('mentiuni_speciale') || '',
       message: 'Plata a fost efectuată cu succes!',
