@@ -71,10 +71,10 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
     console.log(isSignedIn, storeData.paymentMethod, storeData.shippingAddress);
 
     // Verificare: asigură-te că utilizatorul este autentificat și că datele necesare pentru checkout sunt disponibile.
-    if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
-      console.error("Date lipsă pentru checkout");
-      return;
-    }
+    // if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
+    //   console.error("Date lipsă pentru checkout");
+    //   return;
+    // }
     // După acest punct, știm sigur că shippingAddress nu este null.
     const shippingAddress = storeData.shippingAddress;
 
