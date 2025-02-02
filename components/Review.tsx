@@ -70,12 +70,13 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
   const handleCheckout = async () => {
     console.log(isSignedIn, storeData.paymentMethod, storeData.shippingAddress);
 
-    // Verificare: asigură-te că utilizatorul este autentificat și că datele necesare pentru checkout sunt disponibile.
-    // if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
-    //   console.error("Date lipsă pentru checkout");
-    //   return;
-    // }
-    // După acest punct, știm sigur că shippingAddress nu este null.
+    // Verificare: asigură-te că utilizatorul este autentificat și că toate datele necesare sunt disponibile.
+    if (!storeData.shippingAddress) {
+      console.error("Date lipsă pentru checkout");
+      return;
+    }
+
+    // Declaram o variabilă locală pentru adresa de livrare
     const shippingAddress = storeData.shippingAddress;
 
     setIsLoading(true);
@@ -128,7 +129,7 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
 
   const handleCashOnDelivery = async () => {
     try {
-      // Folosim crypto.randomUUID() cu paranteze pentru a genera un UUID
+      // Generăm un UUID pentru numărul comenzii
       const orderNumber = crypto.randomUUID();
       const subtotal = storeData.groupedItems.reduce((total, item) => {
         return total + (item.variant?.price ?? 0) * item.quantity;
