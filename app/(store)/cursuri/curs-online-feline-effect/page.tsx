@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 // Type for user metadata
 type UserMetadata = {
   hasCourseAccess?: boolean;
-  hasBonusAccess?: boolean;
+  // hasBonusAccess?: boolean;
 };
 
 export default async function OnlineCoursePage() {
@@ -14,17 +14,17 @@ export default async function OnlineCoursePage() {
 
   // Get user and check for course access with proper type checking
   let hasAccess = false;
-  let hasBonusAccess =false;
+  // let hasBonusAccess =false;
   if (userId) {
     try {
       const user = await clerkClient.users.getUser(userId);
       const metadata = user.publicMetadata as UserMetadata;
       hasAccess = metadata.hasCourseAccess ?? false;
-      hasBonusAccess =metadata.hasBonusAccess ?? false;
+      // hasBonusAccess =metadata.hasBonusAccess ?? false;
     } catch (error) {
       console.error('Error fetching user:', error);
     }
   }
   
-  return <OnlineCourseClient hasAccess={hasAccess} hasBonusAccess={hasBonusAccess} />;
+  return <OnlineCourseClient hasAccess={hasAccess}  />;
 }

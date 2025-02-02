@@ -9,8 +9,6 @@ import type { Metadata } from "../app/actions/createCheckoutSession";
 import type { PaymentMethod, BasketItem, Address, BillingAddress } from "@/app/(store)/store";
 import { SHIPPING_COST } from "@/lib/constants";
 
-
-
 interface StoreData {
   paymentMethod: PaymentMethod;
   groupedItems: BasketItem[];
@@ -38,7 +36,6 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
     billingAddress: null,
     promoCode: null,
     promoDiscount: 0,
-
   });
 
   useEffect(() => {
@@ -68,19 +65,18 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       promoCode: store.promoCode || null,
       promoDiscount: store.promoDiscount || 0,
     }));
-  }, [
-    shippingAddressInStore,
-    billingAddressInStore,
-    promoCodeInStore,
-    promoDiscountInStore,
-  ]);
+  }, [shippingAddressInStore, billingAddressInStore, promoCodeInStore, promoDiscountInStore]);
 
   const handleCheckout = async () => {
-    console.log(isSignedIn, storeData.paymentMethod, storeData.shippingAddress)
+    console.log(isSignedIn, storeData.paymentMethod, storeData.shippingAddress);
+
+    // Verificare: asigură-te că utilizatorul este autentificat și că datele necesare pentru checkout sunt disponibile.
     if (!isSignedIn || !storeData.paymentMethod || !storeData.shippingAddress) {
       console.error("Date lipsă pentru checkout");
       return;
     }
+    // După acest punct, știm sigur că shippingAddress nu este null.
+    const shippingAddress = storeData.shippingAddress;
 
     setIsLoading(true);
 
@@ -88,17 +84,18 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       if (storeData.paymentMethod === "card") {
         const metadata: Metadata = {
           orderNumber: crypto.randomUUID(),
-          customerName: user?.fullName ?? (storeData.shippingAddress.firstName + " " + storeData.shippingAddress.lastName),
+          customerName:
+            user?.fullName ?? (shippingAddress.firstName + " " + shippingAddress.lastName),
           customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
           clerkUserId: user?.id ?? "",
           shippingCost: SHIPPING_COST.toString(),
-          firstName: storeData.shippingAddress.firstName,
-          lastName: storeData.shippingAddress.lastName,
-          phone: storeData.shippingAddress.phone,
-          street: storeData.shippingAddress.street,
-          city: storeData.shippingAddress.city,
-          province: storeData.shippingAddress.province,
-          postalCode: storeData.shippingAddress.postalCode,
+          firstName: shippingAddress.firstName,
+          lastName: shippingAddress.lastName,
+          phone: shippingAddress.phone,
+          street: shippingAddress.street,
+          city: shippingAddress.city,
+          province: shippingAddress.province,
+          postalCode: shippingAddress.postalCode,
           promoCode: storeData.promoCode,
           promoDiscount: storeData.promoDiscount,
         };
@@ -131,6 +128,7 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
 
   const handleCashOnDelivery = async () => {
     try {
+      // Folosim crypto.randomUUID() cu paranteze pentru a genera un UUID
       const orderNumber = crypto.randomUUID();
       const subtotal = storeData.groupedItems.reduce((total, item) => {
         return total + (item.variant?.price ?? 0) * item.quantity;
@@ -141,30 +139,16 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
         : 0;
       const finalTotal = subtotal - discountAmount + SHIPPING_COST;
 
-      // const awbNumber = await generateAwb({
-      //   cart: {
-      //     id: orderNumber,
-      //     shipping_address: {
-      //       first_name: storeData.shippingAddress?.firstName || "",
-      //       last_name: storeData.shippingAddress?.lastName || "",
-      //       phone: storeData.shippingAddress?.phone || "",
-      //       email: user?.emailAddresses[0]?.emailAddress ?? "",
-      //       province: storeData.shippingAddress?.province || "",
-      //       city: storeData.shippingAddress?.city || "",
-      //       address_1: storeData.shippingAddress?.street || "",
-      //       address_2: "",
-      //       postal_code: storeData.shippingAddress?.postalCode || "",
-      //     },
-      //   },
-      // });
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cash-on-delivery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderNumber,
-          customerName: user?.fullName ?? (storeData.shippingAddress?.lastName + ' ' + storeData.shippingAddress?.firstName),
-          customerEmail: user?.emailAddresses[0]?.emailAddress ?? storeData?.shippingAddress?.email,
+          customerName:
+            user?.fullName ??
+            (storeData.shippingAddress?.lastName + " " + storeData.shippingAddress?.firstName),
+          customerEmail:
+            user?.emailAddresses[0]?.emailAddress ?? storeData?.shippingAddress?.email,
           clerkUserId: user?.id,
           products: storeData.groupedItems.map((item) => ({
             productId: item.product._id,
@@ -190,7 +174,6 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
           currency: "RON",
           address: storeData.shippingAddress,
           billingAddress: storeData.billingAddress,
-          // awb: awbNumber,
         }),
       });
 
@@ -218,10 +201,9 @@ const Review: React.FC<ReviewProps> = ({ isActive }) => {
       )}
 
       <p className="lg:text-[14px] text-[12px]">
-        Făcând clic pe butonul &quot;Plasează Comanda&quot;, confirmați că ați
-        citit, înțeles și acceptat Termenii de Utilizare, Termenii de Vânzare și
-        Politica de Retur și recunoașteți că ați citit Politica de
-        Confidențialitate a magazinului LorenaLash.
+        Făcând clic pe butonul &quot;Plasează Comanda&quot;, confirmați că ați citit, înțeles și acceptat
+        Termenii de Utilizare, Termenii de Vânzare și Politica de Retur și recunoașteți că ați citit
+        Politica de Confidențialitate a magazinului LorenaLash.
       </p>
 
       <button
