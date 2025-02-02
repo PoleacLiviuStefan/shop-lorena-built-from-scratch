@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react"
 import {  Stripe,loadStripe } from "@stripe/stripe-js"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
-
+import {getAllCourses} from '@/sanity/lib/courses/getCoursesDatesClient'
 interface FormData {
   user_nume: string;
   user_prenume: string;
@@ -13,17 +13,29 @@ interface FormData {
   mentiuni_speciale: string;
 }
 
+interface CourseInterval {
+  startDate: string;
+  endDate: string;
+}
+
+interface Course {
+  name: string;
+  courseIntervals: CourseInterval[];
+}
+
+
 let stripePromise: Promise<Stripe | null>;
 
 const getStripe = (): Promise<Stripe | null> => {
   if (!stripePromise) {
     stripePromise = loadStripe("pk_live_51MroBpCV1XqGrlRbJMZ8BZ6cFMqZjpa5yCxEknMWc2ioPxrO2V9VhGZm77CMOtYF1vo6hzw85kbC64bJwvIkg2OG00SxxOnm59");
+    //pk_test_51MroBpCV1XqGrlRbp1l5l1QjwkrjcuXGwkb1MIdSw1LKpE8Z7WA2n1VNVkYv5JmQk7YQPLHUXGxtPAJ2vKdtsy3r00DlCrZk4y
   }
   return stripePromise;
 };
 
 const Buy = () => {
-  const [curs, setCurs] = useState<string | null>(localStorage.getItem("cumparaCurs"))
+  const [curs, setCurs] = useState<string | null>(null)
   // const [coursesInfo, setCoursesInfo] = useState([])
   const [formData, setFormData] = useState<FormData>({
     user_nume: '',
@@ -33,55 +45,16 @@ const Buy = () => {
     user_adresa: '',
     mentiuni_speciale: '',
   });
-  const [indexSelectedCourse, setIndexSelectedCourse] = useState(
-    localStorage.getItem("cumparaCurs") === "Curs De Baza (Avans)"
-      ? 0
-      : localStorage.getItem("cumparaCurs") === "Curs De Baza (Integral)"
-      ? 0
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs De Baza + Kit Inclus (Integral)"
-      ? 0
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs De Efecte Speciale 1 Zi (Avans)"
-      ? 1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs De Efecte Speciale 1 Zi (Integral)"
-      ? 1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs De Perfectionare 2 Zile (Avans)"
-      ? 1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs De Perfectionare 2 Zile (Integral)"
-      ? 1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 2 Zile (Avans)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Efecte Speciale 1 Zi (Avans)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 2 Zile Fara Kit (Integral)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 2 Zile + Kit Inclus (Integral)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 3 Zile (Avans)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 3 Zile Fara Kit (Integral)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs VIP De Baza 3 Zile + Kit Inclus (Integral)"
-      ? -1
-      : localStorage.getItem("cumparaCurs") ===
-        "Curs Efecte Speciale 1 Zi (Avans)"
-      ? 2 : localStorage.getItem("cumparaCurs") ===
-        "Curs De Baza Premium (Avans)" ? 3 
-      : 3
-  )
+  const [indexSelectedCourse, setIndexSelectedCourse] = useState(3);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [loading, setLoading] = useState(false)
+  const [perioadeCurs, setPerioadeCurs] = useState<string[][]>([
+    [], // CURS DE BAZA - poziția 0
+    [], // CURS DE EFECTE SPECIALE - poziția 1
+    [], // Empty
+    []  // CURS DE BAZA PREMIUM - poziția 3
+  ]);
   const [pret, setPret] = useState(() => {
     switch (curs) {
       case "Curs De Baza (Integral)":
@@ -107,42 +80,103 @@ const Buy = () => {
     }
   })
 
-  const [pretCursSelectat, setPretCursSelectat] = useState(
-    localStorage.getItem("cumparaCurs")
-  )
+  const [pretCursSelectat, setPretCursSelectat] = useState<string | null>(null);
 
-  const perioadeCurs = [
-    ["17-18 Februarie", "24-25 Februarie", "24-25 Martie"],
-    ["19-20 Februarie",'25-26 Martie'],
-    [],
-    ["24-25-26 Februarie","24-25-26 Martie"]
-   ]
+  const formatDateInterval = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const formatDay = (date: Date) => date.getDate();
+    const formatMonth = (date: Date) => {
+      const months = [
+        "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
+        "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"
+      ];
+      return months[date.getMonth()];
+    };
+  
+    return `${formatDay(start)}-${formatDay(end)} ${formatMonth(start)}`;
+  };
 
-  const fetchAvailableDates = async () => {
+  const fetchCourseData = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/external/course`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      if (!response.ok) throw new Error("Failed to fetch available dates")
-
-      const result = await response.json()
-      console.log("result", result.courses)
-      // setCoursesInfo(result.courses)
+      const courses = await getAllCourses();
+      const newPerioadeCurs = [...perioadeCurs];
+      console.log('periode curs: ',newPerioadeCurs)
+      courses.forEach((course: Course) => {
+        const formattedDates = course.courseIntervals.map((interval:CourseInterval) => 
+          formatDateInterval(interval.startDate, interval.endDate)
+        );
+  
+        switch(course.name) {
+          case "CURS DE BAZA":
+            newPerioadeCurs[0] = formattedDates;
+            break;
+          case "CURS DE EFECTE SPECIALE":
+            newPerioadeCurs[1] = formattedDates;
+            break;
+          case "CURS DE BAZA PREMIUM":
+            newPerioadeCurs[3] = formattedDates;
+            break;
+        }
+      });
+  
+      setPerioadeCurs(newPerioadeCurs);
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error fetching available dates:", error.message);
-      } else {
-        console.error("Unexpected error:", error);
-      }}
-  }
+      console.error('Error in fetchCourseData:', error);
+    }
+  };
+  useEffect(() => {
+    fetchCourseData();
+    if (typeof window !== 'undefined') {
+      // Setează cursul
+      const savedCurs = localStorage.getItem("cumparaCurs");
+      setCurs(savedCurs);
+      setPretCursSelectat(savedCurs);
+      
+      // Setează indexSelectedCourse
+      setIndexSelectedCourse(
+        savedCurs === "Curs De Baza (Avans)"
+          ? 0
+          : savedCurs === "Curs De Baza (Integral)"
+          ? 0
+          : savedCurs === "Curs De Baza + Kit Inclus (Integral)"
+          ? 0
+          : savedCurs === "Curs De Efecte Speciale 1 Zi (Avans)"
+          ? 1
+          : savedCurs === "Curs De Efecte Speciale 1 Zi (Integral)"
+          ? 1
+          : savedCurs === "Curs De Perfectionare 2 Zile (Avans)"
+          ? 1
+          : savedCurs === "Curs De Perfectionare 2 Zile (Integral)"
+          ? 1
+          : savedCurs === "Curs VIP De Baza 2 Zile (Avans)"
+          ? -1
+          : savedCurs === "Curs VIP De Efecte Speciale 1 Zi (Avans)"
+          ? -1
+          : savedCurs === "Curs VIP De Baza 2 Zile Fara Kit (Integral)"
+          ? -1
+          : savedCurs === "Curs VIP De Baza 2 Zile + Kit Inclus (Integral)"
+          ? -1
+          : savedCurs === "Curs VIP De Baza 3 Zile (Avans)"
+          ? -1
+          : savedCurs === "Curs VIP De Baza 3 Zile Fara Kit (Integral)"
+          ? -1
+          : savedCurs === "Curs VIP De Baza 3 Zile + Kit Inclus (Integral)"
+          ? -1
+          : savedCurs === "Curs Efecte Speciale 1 Zi (Avans)"
+          ? 2
+          : savedCurs === "Curs De Baza Premium (Avans)"
+          ? 3
+          : 3
+      );
+    }
+  }, [])
+
 
   useEffect(() => {
-    console.log("Da")
-    fetchAvailableDates()
-  }, [])
+    setSelectedPeriod('');
+  }, [indexSelectedCourse]);
 
   const redirectToCheckout = async () => {
     setLoading(true);
@@ -169,8 +203,8 @@ const Buy = () => {
       const { error } = await stripe.redirectToCheckout({
         lineItems: [{ price: pretCursSelectat, quantity: 1 }],
         mode: "payment",
-        successUrl: "https://www.lorenalash.ro/ro/cursuri/succes",
-        cancelUrl: "https://www.lorenalash.ro/ro/cursuri/esuat",
+        successUrl: "https://www.lorenalash.ro/cursuri/succes", //live- https://www.lorenalash.ro/cursuri/succes  http://localhost:3000/cursuri/succes
+        cancelUrl: "https://www.lorenalash.ro/cursuri/esuat", //test -  http://localhost:3000/cursuri/esuat
       });
   
       // Gestionează eventualele erori de la Stripe
@@ -192,6 +226,8 @@ const Buy = () => {
     switch (curs) {
       case "Curs De Baza (Avans)":
         setPretCursSelectat("price_1OvQTLCV1XqGrlRbSm2Z4L2u")
+        // price_1Qo2ImCV1XqGrlRbBSReXZ9x - test
+       
         setPret("500")
         break
       case "Curs De Baza (Integral)":
@@ -200,6 +236,7 @@ const Buy = () => {
         break
       case "Curs De Baza Premium (Avans)":
         setPretCursSelectat("price_1QN0ujCV1XqGrlRbTIf5x2ge") 
+      
         setPret("500")
         break
       case "Curs De Baza + Kit Inclus (Integral)":
@@ -263,15 +300,12 @@ const Buy = () => {
 
   const sendForm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Get the form element
+  
     const form = e.currentTarget;
     const formElements = form.elements as HTMLFormControlsCollection;
     
-    // Create a new FormData object
     const newFormData: Record<string, string> = {};
     
-    // Update form data
     Object.keys(formData).forEach((key) => {
       const element = formElements.namedItem(key) as HTMLInputElement;
       if (element) {
@@ -279,14 +313,20 @@ const Buy = () => {
         localStorage.setItem(key, element.value);
       }
     });
-
+  
     setFormData(prev => ({
       ...prev,
       ...newFormData
     }));
     
+    // Folosim localStorage în loc de sessionStorage
     sessionStorage.setItem('payment_intent', 'processing');
-
+    
+    // Salvăm și perioada selectată dacă există
+    if (selectedPeriod) {
+      localStorage.setItem('selected_period', selectedPeriod);
+    }
+  
     try {
       await redirectToCheckout();
     } catch (error) {
@@ -360,7 +400,11 @@ const Buy = () => {
               name="tip_curs"
               value={curs ?? ''}
               onChange={(e) => {
-                setCurs(e.target.value)
+                const selectedValue = e.target.value;
+                setCurs(selectedValue); 
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem("cumparaCurs", selectedValue);
+                }
                 setIndexSelectedCourse(
                   e.target.value === "Curs De Baza (Avans)"
                     ? 0
@@ -411,21 +455,14 @@ const Buy = () => {
             >
               <option
                 value="Curs De Baza (Avans)"
-                onClick={() => setCurs("Curs De Baza (Avans)")}
-                selected={
-                  localStorage.getItem("cumparaCurs") === "Curs De Baza (Avans)"
-                }
+                defaultValue={curs === "Curs De Baza (Avans)" ? "selected" : undefined}
               >
                 CURS DE BAZA (AVANS)
               </option>
 
               <option
                 value="Curs De Baza Premium (Avans)"
-                onClick={() => setCurs("Curs De Baza Premium (Avans)")}
-                selected={
-                  localStorage.getItem("cumparaCurs") ===
-                  "Curs De Baza Premium(Avans)"
-                }
+                defaultValue={curs === "Curs De Baza Premium (Avans)" ? "selected" : undefined}
               >
                 CURS DE BAZA PREMIUM(AVANS)
               </option>
@@ -440,11 +477,7 @@ const Buy = () => {
 
               <option
                 value="Curs De Efecte Speciale 1 Zi (Avans)"
-                onClick={() => setCurs("Curs De Efecte Speciale 1 Zi (Avans)")}
-                selected={
-                  localStorage.getItem("cumparaCurs") ===
-                  "Curs De Perfectionare"
-                }
+                defaultValue={curs === "Curs De Perfectionare" ? "selected" : undefined}
               >
                 CURS DE EFECTE SPECIALE 1 ZI (AVANS)
               </option>
@@ -460,10 +493,7 @@ const Buy = () => {
 
               <option
                 value="Curs VIP De Baza 2 Zile (Avans)"
-                onClick={() => setCurs("Curs VIP De Baza 2 Zile (Avans)")}
-                selected={
-                  localStorage.getItem("cumparaCurs") === "Curs VIP De Baza"
-                }
+                defaultValue={curs === "Curs VIP De Baza" ? "selected" : undefined}
               >
                 CURS VIP DE BAZA 2 ZILE (AVANS)
               </option>
@@ -489,9 +519,7 @@ const Buy = () => {
 
               <option
                 value="Curs VIP De Efecte Speciale 2 Zile (Avans)"
-                onClick={() =>
-                  setCurs("Curs VIP De Efecte Speciale 2 Zile (Avans)")
-                }
+
               >
                 CURS VIP DE EFECTE SPECIALE 2 ZILE (AVANS)
               </option>
@@ -536,21 +564,23 @@ const Buy = () => {
             </label>
 
             <select
-              name="tip_curs"
-              className={`border-[#0b2a24]  border-[1px] w-full lg:w-[15rem] h-[2rem] text-[14px] ${
-                (curs === "Curs VIP De Baza" || indexSelectedCourse === -1) &&
-                "hidden"
-              }`}
-            >
-              {indexSelectedCourse >= 0 &&
-                perioadeCurs[indexSelectedCourse].map((val) => {
-                  return (
-                    <>
-                      <option>{val}</option>
-                    </>
-                  )
-                })}
-            </select>
+  name="tip_curs"
+  value={selectedPeriod}
+  onChange={(e) => {setSelectedPeriod(e.target.value); if (typeof window !== 'undefined') {
+    localStorage.setItem('selectedPeriod', e.target.value);
+  }}}
+  className={`border-[#0b2a24] border-[1px] w-full lg:w-[15rem] h-[2rem] text-[14px] ${
+    (curs === "Curs VIP De Baza" || indexSelectedCourse === -1) &&
+    "hidden"
+  }`}
+>
+  {indexSelectedCourse >= 0 &&
+    perioadeCurs[indexSelectedCourse].map((val, index) => (
+      <option key={`period-${index}`} value={val}>
+        {val}
+      </option>
+    ))}
+</select>
             <div
               onClick={() => console.log(selectedDate)}
               className={` h-[35px] ${

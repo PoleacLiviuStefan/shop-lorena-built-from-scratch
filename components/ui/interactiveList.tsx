@@ -10,7 +10,7 @@ export default function InteractiveList() {
       <li className='mt-[1rem] cursor-pointer text-[14px]'>
         <Link
 
-          href="/acasa"
+          href="/"
         >
           ACASA
         </Link>
