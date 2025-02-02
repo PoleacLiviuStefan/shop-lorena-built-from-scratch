@@ -49,7 +49,7 @@ const Buy = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [loading, setLoading] = useState(false)
-  const [perioadeCurs, setPerioadeCurs] = useState([
+  const [perioadeCurs, setPerioadeCurs] = useState<string[][]>([
     [], // CURS DE BAZA - poziția 0
     [], // CURS DE EFECTE SPECIALE - poziția 1
     [], // Empty
