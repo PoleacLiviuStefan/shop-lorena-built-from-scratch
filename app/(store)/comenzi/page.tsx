@@ -32,7 +32,7 @@ const transformSanityResultToOrder = (sanityOrder: My_ORDERS_QUERYResult[0]): Or
        stock: item.variant.stock
      }
    })) || [],
-   awb: sanityOrder.awb,
+  //  awb: sanityOrder.awb,
    address: sanityOrder.address && {
      firstName: sanityOrder.address.firstName || '',
      lastName: sanityOrder.address.lastName || '',
