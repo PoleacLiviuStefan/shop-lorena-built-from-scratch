@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     const order = await backendClient.create({
       _type: "order",
-      paymentType: "Ramburs",
+      paymentType: "ramburs",
       orderNumber,
       customerName,
       email: customerEmail,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       currency,
       address,
       billingAddress,
-      status: "In Asteptare",
+      status: "În Așteptare",
       orderDate: new Date().toISOString(),
       // awb,
       invoice: {
