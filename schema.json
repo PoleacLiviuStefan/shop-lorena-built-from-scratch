@@ -326,6 +326,71 @@
     }
   },
   {
+    "name": "accessCode",
+    "type": "document",
+    "attributes": {
+      "_id": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_type": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string",
+          "value": "accessCode"
+        }
+      },
+      "_createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_updatedAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "_rev": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        }
+      },
+      "code": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "userId": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "isUsed": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "boolean"
+        },
+        "optional": true
+      },
+      "createdAt": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      }
+    }
+  },
+  {
     "name": "course",
     "type": "document",
     "attributes": {
@@ -367,12 +432,39 @@
         },
         "optional": true
       },
-      "courseDates": {
+      "courseIntervals": {
         "type": "objectAttribute",
         "value": {
           "type": "array",
           "of": {
-            "type": "string"
+            "type": "object",
+            "attributes": {
+              "startDate": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                },
+                "optional": true
+              },
+              "endDate": {
+                "type": "objectAttribute",
+                "value": {
+                  "type": "string"
+                },
+                "optional": true
+              }
+            },
+            "rest": {
+              "type": "object",
+              "attributes": {
+                "_key": {
+                  "type": "objectAttribute",
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         },
         "optional": true
@@ -500,6 +592,13 @@
           "type": "string"
         }
       },
+      "orderIndex": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "number"
+        },
+        "optional": true
+      },
       "orderNumber": {
         "type": "objectAttribute",
         "value": {
@@ -507,17 +606,24 @@
         },
         "optional": true
       },
-      "awb": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "number"
-        },
-        "optional": true
-      },
       "paymentType": {
         "type": "objectAttribute",
         "value": {
-          "type": "string"
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "card"
+            },
+            {
+              "type": "string",
+              "value": "ramburs"
+            },
+            {
+              "type": "string",
+              "value": "transfer"
+            }
+          ]
         },
         "optional": true
       },
@@ -528,23 +634,23 @@
           "of": [
             {
               "type": "string",
-              "value": "In Asteptare"
+              "value": "in_asteptare"
             },
             {
               "type": "string",
-              "value": "Platita"
+              "value": "platita"
             },
             {
               "type": "string",
-              "value": "Finalizata"
+              "value": "livrata"
             },
             {
               "type": "string",
-              "value": "Anulata"
+              "value": "anulata"
             },
             {
               "type": "string",
-              "value": "Returnata"
+              "value": "returnata"
             }
           ]
         },
@@ -606,20 +712,6 @@
         "value": {
           "type": "object",
           "attributes": {
-            "city": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "string"
-              },
-              "optional": true
-            },
-            "email": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "string"
-              },
-              "optional": true
-            },
             "firstName": {
               "type": "objectAttribute",
               "value": {
@@ -634,7 +726,14 @@
               },
               "optional": true
             },
-            "phone": {
+            "province": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "city": {
               "type": "objectAttribute",
               "value": {
                 "type": "string"
@@ -648,14 +747,21 @@
               },
               "optional": true
             },
-            "province": {
+            "street": {
               "type": "objectAttribute",
               "value": {
                 "type": "string"
               },
               "optional": true
             },
-            "street": {
+            "phone": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "email": {
               "type": "objectAttribute",
               "value": {
                 "type": "string"
@@ -880,7 +986,17 @@
       "currency": {
         "type": "objectAttribute",
         "value": {
-          "type": "string"
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "RON"
+            },
+            {
+              "type": "string",
+              "value": "EUR"
+            }
+          ]
         },
         "optional": true
       }
