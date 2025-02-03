@@ -35,7 +35,7 @@ export async function createCheckoutSessionCourse() {
 
         {
           key: 'detalii_adresa',
-          label: { type: 'custom', custom: 'Bloc, Scara, Etaj, Ap., Nr. sau Datele Firmei dupa caz' },
+          label: { type: 'custom', custom: 'Bloc, Scara, Etaj, Ap. | Datele Firmei dupa caz' },
           type: 'text',
           optional: false,
         },
