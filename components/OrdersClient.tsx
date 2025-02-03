@@ -7,11 +7,11 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { imageUrl } from "@/lib/imageUrl";
 
 export type OrderStatus =
-  | "In Asteptare"
+  | "in_asteptare"
   | "platita"
-  | "completed"
-  | "canceled"
-  | "refunded";
+  | "livrata"
+  | "anulata"
+  | "returnata";
 
 export interface Address {
   firstName: string;
@@ -134,22 +134,23 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
     setCurrentPage(1);
   };
 
+
   const getStatusClass = (status: OrderStatus) => {
-    switch (status) {
-      case "platita":
-        return "bg-green-100 text-green-800";
-      case "In Asteptare":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-blue-100 text-blue-800";
-      case "canceled":
-        return "bg-red-100 text-red-800";
-      case "refunded":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+      switch (status) {
+        case "platita":
+          return "bg-green-100 text-green-800";
+        case "in_asteptare":
+          return "bg-yellow-100 text-yellow-800";
+        case "livrata":
+          return "bg-blue-100 text-blue-800";
+        case "anulata":
+          return "bg-red-100 text-red-800";
+        case "returnata":
+          return "bg-orange-100 text-orange-800";
+        default:
+          return "bg-gray-100 text-gray-800";
+      }
+    };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
@@ -168,14 +169,13 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Toate</option>
-            <option value="In Asteptare">În Așteptare</option>
+            <option value="in_asteptare">În Așteptare</option>
             <option value="platita">Plătită</option>
-            <option value="completed">Finalizată</option>
-            <option value="canceled">Anulată</option>
-            <option value="refunded">Returnată</option>
+            <option value="livrata">Livrată</option>
+            <option value="anulata">Anulată</option>
+            <option value="returnata">Returnată</option>
           </select>
-        </div>
-
+        </div>    
         {filteredOrders.length === 0 ? (
           <div className="text-center text-gray-600">
             <p>Nu există comenzi pentru acest status</p>
@@ -353,7 +353,7 @@ const OrdersClient: React.FC<OrdersClientProps> = ({ orders }) => {
                       </span>
                     </div>
 
-                    {(order.status === "In Asteptare" ||
+                    {(order.status === "in_asteptare" ||
                       order.status === "platita") && (
                       <button
                         onClick={() => {
