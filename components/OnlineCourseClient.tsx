@@ -172,7 +172,7 @@ export default function OnlineCourseClient({
 
             <div className="max-w-2xl text-center space-y-4">
               <h3 className="text-2xl font-bold mb-4">
-                CURS ONLINE FELINE EFFECT – REDUCERE 40% PÂNĂ Pe 4 FEBRUARIE
+                CURS ONLINE FELINE EFFECT – REDUCERE 40%
               </h3>
               <p className="text-gray-600">
                 În primul rând, felicitări pentru că ai ajuns aici pe pagină, ceea ce înseamnă că îți dorești
