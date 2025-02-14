@@ -9,6 +9,7 @@ import { VisualEditing } from "next-sanity";
 import { draftMode } from "next/headers";
 import Footer from "@/components/Footer";
 import { getAllCategories } from "@/sanity/lib/products/getAllCategories";
+import PopupSales from "@/components/PopupSale";
 
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function RootLayout({
     <ClerkProvider dynamic localization={roRO}>
       <html lang="en">
         <body>
+          <PopupSales />
           {(await draftMode()).isEnabled && (
             <>
               <DisableDraftMode />

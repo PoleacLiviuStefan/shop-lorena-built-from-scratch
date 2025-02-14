@@ -118,10 +118,10 @@ export default function OnlineCourseClient({
               />
               <div className="bg-white p-6 rounded-lg shadow-md w-full lg:w-[400px]">
                 <div className="flex justify-center items-center gap-4 mb-6">
-                  <span className="text-xl lg:text-3xl font-bold">599 RON</span>
+                  <span className="text-xl lg:text-3xl font-bold">499 RON</span>
                   <span className="text-gray-500 line-through">998 RON</span>
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                    Reducere 40%
+                    Reducere 50%
                   </span>
                 </div>
 
@@ -172,7 +172,9 @@ export default function OnlineCourseClient({
 
             <div className="max-w-2xl text-center space-y-4">
               <h3 className="text-2xl font-bold mb-4">
-                CURS ONLINE FELINE EFFECT – REDUCERE 40%
+
+                CURS ONLINE FELINE EFFECT – REDUCERE 50% PÂNĂ DUMINICĂ
+
               </h3>
               <p className="text-gray-600">
                 În primul rând, felicitări pentru că ai ajuns aici pe pagină, ceea ce înseamnă că îți dorești
