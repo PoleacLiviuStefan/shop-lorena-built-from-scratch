@@ -110,11 +110,11 @@ export default function OnlineCourseClient({
       ) : (
         <div className="flex flex-col items-center min-h-screen">
           <div className="flex flex-col lg:grid lg:grid-cols-2 items-center gap-6 mt-8 px-4">
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               <Image
                 alt="CURS ONLINE FELINE EFFECT"
                 src={online}
-                className="w-[21rem] lg:w-[25rem]"
+                className="w-full lg:w-[400px]"
               />
               <div className="bg-white p-6 rounded-lg shadow-md w-full lg:w-[400px]">
                 <div className="flex justify-center items-center gap-4 mb-6">

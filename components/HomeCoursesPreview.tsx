@@ -44,7 +44,7 @@ className="w-[300px] h-auto"
             <h2 className="text-[16px] lg:text-[22px] font-extrabold text-center">Curs De Efecte Speciale</h2>
             </div>
         </Link>
-        <Link href="/cursuri/curs-VIP" className="relative"  >
+        <Link href="/cursuri/curs-vip" className="relative"  >
         <Image
        
           src={CursVip}
