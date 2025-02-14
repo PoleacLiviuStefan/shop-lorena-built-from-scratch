@@ -11,7 +11,15 @@ type EmailData = {
   tip_curs: string;
   data_vip: string;
   mentiuni_speciale: string;
+  data_curs:string;
   message: string;
+};
+
+type EmailClient = {
+
+  user_email: string;
+  tip_curs: string;
+  data_curs:string;
 };
 
 const Success: React.FC = () => {
@@ -35,11 +43,18 @@ const Success: React.FC = () => {
       user_telefon: localStorage.getItem('user_telefon') || '',
       user_email: localStorage.getItem('user_email') || '',
       user_adresa: localStorage.getItem('user_adresa') || '',
-      tip_curs: localStorage.getItem('selectedPeriod') || '' + localStorage.getItem('cumparaCurs') || '',
+      tip_curs: localStorage.getItem('cumparaCurs') || '',
+      data_curs: localStorage.getItem('selected_period') || '',
       data_vip: localStorage.getItem('data_vip') || '',
       mentiuni_speciale: localStorage.getItem('mentiuni_speciale') || '',
       message: 'Plata a fost efectuată cu succes!',
     };
+    const emailClient: EmailClient ={
+      data_curs: localStorage.getItem('selected_period') || '',
+      tip_curs: localStorage.getItem('cumparaCurs') || '',
+      user_email: localStorage.getItem('user_email') || '',
+       
+    }
 
     emailjs
       .send(
@@ -54,6 +69,15 @@ const Success: React.FC = () => {
 
           // Actualizează `sessionStorage` pentru a indica că emailul a fost trimis
           sessionStorage.setItem('payment_intent', 'sent');
+          emailjs
+          .send(
+            'service_p38p3w9', // ID-ul serviciului
+            'template_k14f8rm', // ID-ul șablonului
+            emailClient,
+            'nh75acogwfrnq-1fd' // Cheia publică
+          ).then(()=>{
+            
+          })
           setEmailSent(true);
         },
         (error) => {
