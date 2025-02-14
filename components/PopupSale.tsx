@@ -45,13 +45,13 @@ const PopupSales: React.FC = () => {
             
     <h3 className="text-[16px] lg:text-[20px] text-white">REDUCERE CURS ONLINE DE <span className="text-red-500 font-extrabold">50%</span> </h3>
     <h3 className="text-[16px] lg:text-[20px] text-white">REDUCERE DE 20% LA TOATE PRODUSELE CU CODUL <span className="text-red-500 font-extrabold">VALENTINES20</span> </h3>
-    <Image src={online} className=" w-[110px] lg:w-[280px] h-auto" alt="Promotional" />
+    <Image src={online} className=" w-[180px] lg:w-[280px] h-auto" alt="Promotional" />
 
              
             </div>
             <button
               onClick={handleClosePopup}
-              className="absolute lg:top-1 lg:right-1 bg-white rounded-full w-[20px] lg:w-[25px] h-[20px] lg:h-[25px] lg:text-[18px] font-extrabold"
+              className="absolute top-1 right-1 bg-white rounded-full w-[20px] lg:w-[25px] h-[20px] lg:h-[25px] text-[13px] lg:text-[18px] font-extrabold"
             >
               X
             </button>

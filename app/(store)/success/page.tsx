@@ -1,4 +1,4 @@
-"use client";
+f"use client";
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -218,8 +218,8 @@ const SuccessPage = () => {
       };
 
       await Promise.all([
-        emailjs.send("service_5kulkwh", "template_soo87le", emailData, "uSA0IVA9aGhfzQfPC"),
-        emailjs.send("lorenadanoiu", "template_x4fyyyr", notificationData, "jkddlsCqSLugxlMFY")
+        emailjs.send("service_5kulkwh", "template_soo87le", emailData, "uSA0IVA9aGhfzQfPC"), //template_soo87le
+        emailjs.send("lorenadanoiu", "template_x4fyyyr", notificationData, "jkddlsCqSLugxlMFY") //template_x4fyyyr
       ]);
 
       console.log("Emailuri trimise cu succes!");

@@ -196,7 +196,8 @@ const Buy = () => {
   }, []);
 
   useEffect(() => {
-    setSelectedPeriod(perioadeCurs[indexSelectedCourse][0]);
+    if(indexSelectedCourse !== -1)
+      setSelectedPeriod(perioadeCurs[indexSelectedCourse][0]);
   }, [indexSelectedCourse]);
 
   const redirectToCheckout = async () => {
