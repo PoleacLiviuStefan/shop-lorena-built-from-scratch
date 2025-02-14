@@ -44,7 +44,7 @@ const PopupSales: React.FC = () => {
             <div className="flex flex-col items-center w-full mt-[16px]">
             
     <h3 className="text-[16px] lg:text-[20px] text-white">REDUCERE CURS ONLINE DE <span className="text-red-500 font-extrabold">50%</span> </h3>
-    <h3 className="text-[16px] lg:text-[20px] text-white">REDUCERE DE 20% LA TOATE PRDOUSELE CU CODUL <span className="text-red-500 font-extrabold">VALENTINES20</span> </h3>
+    <h3 className="text-[16px] lg:text-[20px] text-white">REDUCERE DE 20% LA TOATE PRODUSELE CU CODUL <span className="text-red-500 font-extrabold">VALENTINES20</span> </h3>
     <Image src={online} className=" w-[110px] lg:w-[280px] h-auto" alt="Promotional" />
 
              
