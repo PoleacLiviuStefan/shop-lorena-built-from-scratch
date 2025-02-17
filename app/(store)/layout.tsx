@@ -44,7 +44,7 @@ export default async function RootLayout({
     <ClerkProvider dynamic localization={roRO}>
       <html lang="en">
         <body>
-          <PopupSales />
+          {/* <PopupSales /> */}
           {(await draftMode()).isEnabled && (
             <>
               <DisableDraftMode />
