@@ -9,7 +9,7 @@ import { VisualEditing } from "next-sanity";
 import { draftMode } from "next/headers";
 import Footer from "@/components/Footer";
 import { getAllCategories } from "@/sanity/lib/products/getAllCategories";
-import PopupSales from "@/components/PopupSale";
+// import PopupSales from "@/components/PopupSale";
 
 
 export const metadata: Metadata = {
