@@ -45,10 +45,10 @@ const Page = () => {
             <p className=' lg:text-[18px] text-justify'>
               Achiti <span className='font-bold'>AVANSUL</span> de <span className='font-bold'>500 de lei </span> aici sau la locatie pentru a-ti rezerva locul, restul sumei se achita in prima zi de curs
             </p>
-            <p className="relative flex flex-col justify-center items-center  font-extrabold ">
+            {/* <p className="relative flex flex-col justify-center items-center  font-extrabold ">
                   {" "}
                   KIT pentru acasa inclus in pret(690 lei)
-                </p>{" "}
+                </p>{" "} */}
                 <div className="flex  items-center  justify-between w-full text-[18px] lg:text-[20px] font-thin mt-[1rem]">
               2 ZILE{" "}
               <div className="flex flex-col items-center ">
@@ -64,10 +64,10 @@ const Page = () => {
             <p className=' lg:text-[18px] text-justify'>Avansul nu este retunabil, dar se poate modifica perioada cursului cu minim 2 saptamani înainte.</p>
             </div>
           </div>
-          <div className="flex  flex-col items-center w-full font-thin mt-[1rem]">
+          {/* <div className="flex  flex-col items-center w-full font-thin mt-[1rem]">
               <h4 className="font-bold text-[18px] lg:text-[20px] ">Kit-ul Inclus contine:</h4>
               <p>{KitEfecte}</p>
-            </div>
+            </div> */}
         </div>
 
         <div className='relative lg:ml-[4rem] mt-[2rem] lg:mt-0 flex flex-col items-center w-[90%] lg:w-[40rem]'>
