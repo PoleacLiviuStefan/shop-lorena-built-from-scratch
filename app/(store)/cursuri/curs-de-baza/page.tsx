@@ -53,7 +53,7 @@ const CursDeBaza = () => {
               pentru a-ti rezerva locul, restul sumei se achita in prima zi de
               curs
             </h3>
-     
+
             <div className="flex items-center   justify-between w-full text-[18px] lg:text-[20px] font-thin mt-[1rem]">
               PRET TOTAL{" "}
               <div className="flex flex-col items-center ">
@@ -71,6 +71,28 @@ const CursDeBaza = () => {
               <h4 className="font-bold text-[18px] lg:text-[20px] ">Kit-ul Contine:</h4>
               <p>{KitBaza}</p>
             </div>
+            <h3 className="font-bold text-red-500 mt-4">Incepand cu luna Aprilie:</h3>
+            <div className="flex items-center   justify-between w-full text-[18px] lg:text-[20px] font-thin mt-[1rem]">
+              
+              PRET TOTAL{" "}
+              <div className="flex flex-col items-center ">
+                <span className="relative  text-[24px] font-extrabold text-[#DAA520]">
+                  {" "}
+                  2000 lei{" "}
+                </span>{" "}
+              </div>{" "}
+            </div>
+            <div className="flex items-center   justify-between w-full text-[18px] lg:text-[20px] font-thin mt-[1rem]">
+              
+              PRET TOTAL{" "}
+              <div className="flex flex-col items-center ">
+                <span className="relative flex flex-col text-right text-[24px] font-extrabold text-[#DAA520]">
+                  {" "}
+                  2500 lei{" "} <span className="text-[20px]"> + KIT INCLUS IN PRET</span>
+                </span>{" "}
+              </div>{" "}
+            </div>
+   
           </div>
           {/*
           <div className="h-[40rem] mt-[5rem]">
