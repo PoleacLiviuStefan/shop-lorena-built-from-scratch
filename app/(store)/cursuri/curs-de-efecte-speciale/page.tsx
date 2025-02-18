@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react'
 import cursDePerfectionare from '../../../../public/Imagini/cursuri/curs_de_efecte_speciale.jpg'
 import Image from 'next/image'
-import { KitEfecte } from '../../../constants'
+//import { KitEfecte } from '../../../constants'
 import Link from 'next/link'
 
 const Page = () => {
