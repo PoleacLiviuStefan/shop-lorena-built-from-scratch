@@ -37,7 +37,7 @@ const CursDeBaza = () => {
           <Link href="/cursuri/checkout" className="w-full">
             <button
               onClick={() => {
-                localStorage.setItem("cumparaCurs", "Curs De Baza (Avans)")
+                localStorage.setItem("cumparaCurs", "CURS DE BAZA")
                 window.scrollTo({ top: 0, left: 0 })
               }}
  className="mt-[2rem] border-[2px] border-black w-full text-[18px] font-bold h-[3rem] rounded-[8px] tracking-[6px] bg-transparent text-black hover:bg-black hover:text-white transition-all ease-in-out duration-200"
