@@ -187,7 +187,7 @@ const Buy = () => {
         setPret("950");
         break;
       default:
-        setPretCursSelectat("price_1OvQTLCV1XqGrlRbSm2Z4L2u");
+        setPretCursSelectat("price_1QtzrKCV1XqGrlRb6FFzxefI");
         //price_1Qo2ImCV1XqGrlRbBSReXZ9x
         setPret("500");
         break;
