@@ -199,7 +199,6 @@ const Buy = () => {
         break;
       default:
         setPretCursSelectat("price_1QtzrKCV1XqGrlRb6FFzxefI");
-        //price_1Qo2ImCV1XqGrlRbBSReXZ9x -live
         break;
     }
   }, [curs]);
