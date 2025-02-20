@@ -71,7 +71,7 @@ const CursDeBaza = () => {
               <h4 className="font-bold text-[18px] lg:text-[20px] ">Kit-ul Contine:</h4>
               <p>{KitBaza}</p>
             </div>
-            <h3 className="font-bold text-red-500 mt-4">Incepand cu luna Aprilie:</h3>
+            <h3 className="font-bold text-red-500 mt-4">Incepand cu  grupa din luna Aprilie:</h3>
             <div className="flex items-center   justify-between w-full text-[18px] lg:text-[20px] font-thin mt-[1rem]">
               
               PRET TOTAL{" "}
