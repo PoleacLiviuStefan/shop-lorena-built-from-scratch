@@ -98,7 +98,7 @@ interface BasketState {
   setError: (error: string | null) => void;
 }
 
-const SHIPPING_COST = 25;
+const SHIPPING_COST = 0;
 
 const useBasketStore = create<BasketState>()(
   persist(
